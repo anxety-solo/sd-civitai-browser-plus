@@ -197,17 +197,17 @@ def save_preview(file_path, api_response, overwrite_toggle=False, sha256=None):
 
                             response = requests.get(url_with_width, proxies=proxies, verify=ssl)
                             if response.status_code == 200:
-                                img = response.content
+                                image_bytes = resize_image_bytes(response.content)
 
                                 if IS_KAGGLE:
                                     import sd_encrypt_image     # Import Module for Encrypt Image
 
-                                    imginfo = img.info or {}
+                                    imginfo = image_bytes.info or {}
                                     if not all(key in imginfo for key in ['Encrypt', 'EncryptPwdSha']):
-                                        sd_encrypt_image.EncryptedImage.from_image(img).save(image_path)
+                                        sd_encrypt_image.EncryptedImage.from_image(image_bytes).save(image_path)
                                 else:
                                     with open(image_path, 'wb') as img_file:
-                                        img_file.write(img)
+                                        img_file.write(image_bytes)
 
                                 print(f"Preview saved at \"{image_path}\"")
                             else:
@@ -216,6 +216,22 @@ def save_preview(file_path, api_response, overwrite_toggle=False, sha256=None):
                             return
                     print(f"No preview images found for \"{name}\"")
                     return
+
+def resize_image_bytes(image_bytes, target_size=512):
+    '''Resize image bytes to target_size on the longer side, keeping aspect ratio.'''
+    image = Image.open(io.BytesIO(image_bytes))
+    width, height = image.size
+
+    if width >= height:
+        new_size = (target_size, int(height * target_size / width))
+    else:
+        new_size = (int(width * target_size / height), target_size)
+
+    resized_image = image.resize(new_size, Image.LANCZOS)
+    output = io.BytesIO()
+    resized_image.save(output, format='PNG')
+    output.seek(0)
+    return output.read()
 
 def get_image_path(install_path, api_response, sub_folder):
     image_location = getattr(opts, "image_location", r"")
