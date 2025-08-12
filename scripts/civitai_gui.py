@@ -62,8 +62,12 @@ def saveSettings(ust, ct, pt, st, bf, cj, td, ol, hi, sn, ss, ts):
         json.dump(data, file, indent=4)
         print(f"Updated settings to: {config}")
 
+# === ANXETY EDITs ===
 def all_visible(html_check):
-    return gr.Button.update(visible='model-checkbox' in html_check)
+    # Count the number of model-checkbox occurrences in the HTML
+    checkbox_count = html_check.count('model-checkbox')
+    # Show the button only if there are 2 or more checkboxes (more than 1 model to select)
+    return gr.Button.update(visible=checkbox_count >= 2)
 
 def HTMLChange(input):
     return gr.HTML.update(value=input)
@@ -484,7 +488,7 @@ def on_ui_tabs():
 
         civitai_text2img_input.change(fn=txt2img_output,inputs=civitai_text2img_input,outputs=civitai_text2img_output)
 
-        list_html_input.change(fn=all_visible, inputs=list_html, outputs=select_all)
+        list_html_input.change(fn=all_visible, inputs=list_html_input, outputs=select_all)
 
         def update_models_dropdown(input):
             # If there is no loaded model data, reset all UI elements and show a message

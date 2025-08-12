@@ -17,6 +17,7 @@
 
 #### 🔧 List of changes taken from pull requests (PRs) or bugfixes:
 
+- Fixed the display logic for the "Select All" button – now it only appears when there are models to select :3
 - Fixed some issues with `sub_folder` [Issues #356](https://github.com/BlafKing/sd-civitai-browser-plus/issues/356)
 - Fixed error `cvitai_subfolders.json does not exist` _(It's not a bug, it's a feature...)_ [Issues #349](https://github.com/BlafKing/sd-civitai-browser-plus/issues/349)
 - Added a way to search for a model by its `hash`. [Issues #309](https://github.com/BlafKing/sd-civitai-browser-plus/issues/309)
@@ -26,13 +27,6 @@
   _(see `download_file` in [scripts/civitai_download.py](./scripts/civitai_download.py))_
 - HTML description cleanup fix taken from [PR #384](https://github.com/BlafKing/sd-civitai-browser-plus/pull/384)</br>
   _(see `clean_description` in [scripts/civitai_file_manage.py](./scripts/civitai_file_manage.py))_
-
-### ToDo:
-- [ ] ...
-- [X] Become terrified at the thought of a complete refactor of the extension.
-- [X] Add a cat to the code 🐱
-
-<h1></h1>
 
 ### 🖼️ Preview Cards (new style):
 
