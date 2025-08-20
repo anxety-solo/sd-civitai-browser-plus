@@ -1186,6 +1186,18 @@ def on_ui_settings():
     )
 
     shared.opts.add_option(
+        'save_img_count',
+        shared.OptionInfo(
+            default=16,
+            label='Number of images to save',
+            component=gr.Slider,
+            component_args=lambda: {'maximum': '64', 'minimum': '4', 'step': '2'},
+            section=download,
+            category_id=cat_id
+        ).info('Number of images to save when using the Save Images button or when auto_save_all_img is enabled')
+    )
+
+    shared.opts.add_option(
         'save_html_on_save',
         shared.OptionInfo(
             default=True,

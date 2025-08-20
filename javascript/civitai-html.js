@@ -58,10 +58,12 @@ function updateCardSize(width, height) {
     addOrUpdateRule(styleSheet, '.civmodelcard .video-bg', dimensionsKeyframes);
     addOrUpdateRule(styleSheet, '.civmodelcard figcaption', textKeyframes);
 
-    // Hide badges when tile size is less than 12
-    var badgeDisplay = width < 12 ? 'none !important' : 'flex !important';
+    // Hide badges when tile size is less than 10
+    var badgeDisplay = width < 10 ? 'none !important' : 'flex !important';
     addOrUpdateRule(styleSheet, '.model-type-badge', `display: ${badgeDisplay}`);
     addOrUpdateRule(styleSheet, '.nsfw-badge', `display: ${badgeDisplay}`);
+
+    // TODO: Dynamic sizing for badges and checkbox on card size change (width)
 }
 
 // Updates site with css insertions

@@ -156,6 +156,7 @@ def delete_model(delete_finish=None, model_filename=None, model_string=None, lis
 
 ## === ANXETY EDITs ===
 def delete_associated_files(directory, base_name):
+    # Delete associated files in the model directory
     for file in os.listdir(directory):
         current_base_name, ext = os.path.splitext(file)
         if (
@@ -171,6 +172,27 @@ def delete_associated_files(directory, base_name):
             except:
                 os.remove(path_to_delete)
                 print(f"Associated file deleted: {path_to_delete}")
+    
+    # Delete downloaded images by pattern: model_name_<i>.*
+    try:
+        # Check current directory for images
+        for file in os.listdir(directory):
+            current_base_name, ext = os.path.splitext(file)
+            # Check if file matches pattern: base_name_<number>
+            if current_base_name.startswith(f"{base_name}_") and ext.lower() in ['.png', '.jpg', '.jpeg', '.gif', '.bmp']:
+                # Verify it's actually a numbered image (e.g., model_0, model_1, etc.)
+                suffix = current_base_name[len(f"{base_name}_"):]
+                if suffix.isdigit():
+                    path_to_delete = os.path.join(directory, file)
+                    try:
+                        send2trash(path_to_delete)
+                        print(f"Image moved to trash: {path_to_delete}")
+                    except:
+                        os.remove(path_to_delete)
+                        print(f"Image deleted: {path_to_delete}")
+
+    except Exception as e:
+        print(f"Error deleting images: {e}")
 
 
 def _resize_image_bytes(image_bytes, target_size=512):
@@ -265,27 +287,77 @@ def get_image_path(install_path, api_response, sub_folder):
     make_dir(image_path)
     return image_path
 
+## === ANXETY EDITs ===
 def save_images(preview_html, model_filename, install_path, sub_folder, api_response=None):
+    """Save images from model preview HTML or API response."""
     image_path = get_image_path(install_path, api_response, sub_folder)
-    img_urls = re.findall(r'data-sampleimg="true" src=[\'"]?([^\'" >]+)', preview_html)
+    img_urls = []
+    
+    # First try to extract images from preview HTML
+    if preview_html and preview_html.strip() != '<div style="min-height: 0px;"></div>': # This pattern was found when trying to save images via the button
+        img_urls = re.findall(r'data-sampleimg="true" src=[\'"]?([^\'" >]+)', preview_html)
+    
+    # If no images found in HTML, try API response
+    if not img_urls and api_response:
+        for item in api_response.get('items', []):
+            for version in item.get('modelVersions', []):
+                for image in version.get('images', []):
+                    if image.get('type') == 'image':
+                        image_url = re.sub(r'/width=\d+', f'/width={image["width"]}', image['url'])
+                        img_urls.append(image_url)
+    
+    # If still no images and no api_response provided, try global data as fallback
+    if not img_urls and not api_response and hasattr(gl, 'json_data') and gl.json_data:
+        for item in gl.json_data.get('items', []):
+            for version in item.get('modelVersions', []):
+                for image in version.get('images', []):
+                    if image.get('type') == 'image':
+                        image_url = re.sub(r'/width=\d+', f'/width={image["width"]}', image['url'])
+                        img_urls.append(image_url)
+    
+    if not img_urls:
+        print("No images found to download.")
+        return
+
+    # Limit number of images to download
+    img_count = getattr(opts, 'save_img_count', 16)
+    img_count = max(4, min(64, img_count))
+    img_urls = img_urls[:img_count]
 
     name = os.path.splitext(model_filename)[0]
 
+    # Setup download
     opener = urllib.request.build_opener()
     opener.addheaders = [('User-agent', 'Mozilla/5.0')]
     urllib.request.install_opener(opener)
 
+    # Download images
+    downloaded_count = 0
     for i, img_url in enumerate(img_urls):
-        filename = f"{name}_{i}.jpg"
+        filename = f"{name}_{i}.png"
         img_url = urllib.parse.quote(img_url, safe=':/=')
         try:
             with urllib.request.urlopen(img_url) as url:
-                with open(os.path.join(image_path, filename), 'wb') as f:
-                    f.write(url.read())
-                    print(f"Downloaded image: {filename}")
+                img_data = url.read()
+                img = Image.open(io.BytesIO(img_data))
+                if img.mode in ('RGBA', 'LA', 'P'):
+                    # Keep transparency for PNG
+                    pass
+                elif img.mode != 'RGB':
+                    img = img.convert('RGB')
+                img.save(os.path.join(image_path, filename), 'PNG')
+                print(f"Downloaded image: {filename}")
+                downloaded_count += 1
 
         except urllib.error.URLError as e:
-            print(f"Error: {e.reason}")
+            print(f"Error downloading {filename}: {e.reason}")
+        except Exception as e:
+            print(f"Error processing image {filename}: {e}")
+    
+    if downloaded_count > 0:
+        print(f"Successfully downloaded {downloaded_count} images to: {image_path}")
+    else:
+        print("No images were downloaded.")
 
 def card_update(gr_components, model_name, list_versions, is_install):
     if gr_components:

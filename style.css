@@ -81,15 +81,15 @@
     position: absolute;
     top: 10px;
     left: 10px;
-    height: 26px;
-    padding: 4px 12px;
+    height: 22px;
+    padding: 3px 10px;
     color: #ffffff;
     background: rgba(0, 0, 0, 0.6);
     border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 12px;
+    border-radius: 10px;
     box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.1);
     backdrop-filter: blur(6px);
-    font-size: 0.85em;
+    font-size: 0.75em;
     font-weight: 600;
     letter-spacing: 0.04em;
     text-transform: uppercase;
@@ -102,10 +102,10 @@
 /* Early Access Badge */
 .civmodelcard.early-access .early-access-icon { /* Icon */
     fill: gold;
-    margin-left: -4px;
+    margin-left: -3px;
     margin-right: 2px;
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
 }
 
 .civmodelcard.early-access { /* Model Card */
@@ -121,17 +121,17 @@
 .nsfw-badge {
     display: flex;
     position: absolute;
-    top: 40px;
+    top: 34px;
     left: 10px;
-    height: 26px;
-    padding: 4px 10px;
+    height: 22px;
+    padding: 3px 8px;
     color: #ffffff;
     background: rgba(0, 0, 0, 0.6);
     border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 12px;
+    border-radius: 10px;
     box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.15);
     backdrop-filter: blur(6px);
-    font-size: 0.85em;
+    font-size: 0.75em;
     font-weight: 600;
     letter-spacing: 0.04em;
     text-transform: uppercase;
@@ -145,8 +145,8 @@
     fill: rgba(255, 255, 255, 0.2);
     margin-left: -4px;
     margin-right: 4px;
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
 }
 
 .civmodelcard:hover .model-type-badge,
@@ -168,14 +168,14 @@
     position: absolute;
     top: 10px;
     right: 10px;
-    width: 26px;
-    height: 26px;
+    width: 22px;
+    height: 22px;
     display: flex;
     align-items: center;
     justify-content: center;
     background: rgba(0, 0, 0, 0.5);
     border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 8px;
+    border-radius: 6px;
     box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.1);
     backdrop-filter: blur(8px);
     cursor: pointer;
@@ -198,8 +198,8 @@
     position: absolute;
     top: 50%;
     left: 50%;
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
     pointer-events: none;
     transform: translate(-50%, -50%) scale(0.7);
     opacity: 0;
@@ -211,12 +211,12 @@
 .checkbox-checkmark::before {
     content: '';
     display: block;
-    width: 16px;
-    height: 16px;
-    background-image: url("data:image/svg+xml;utf8,<svg width='16' height='16' xmlns='http://www.w3.org/2000/svg'><polyline points='3,9 7,13 13,5' fill='none' stroke='%23fff' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+    width: 14px;
+    height: 14px;
+    background-image: url("data:image/svg+xml;utf8,<svg width='14' height='14' xmlns='http://www.w3.org/2000/svg'><polyline points='3,8 6,11 11,4' fill='none' stroke='%23fff' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/></svg>");
     background-repeat: no-repeat;
     background-position: center;
-    background-size: 14px 14px;
+    background-size: 12px 12px;
 }
 
 .model-checkbox:checked + .custom-checkbox .checkbox-checkmark {
