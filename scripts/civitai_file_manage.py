@@ -1171,8 +1171,6 @@ def file_scan(folders, tag_finish, installed_finish, preview_finish, overwrite_t
             gr.Textbox.update(value=number)
         )
 
-    updated_models = []
-    outdated_models = []
     all_model_ids = []
     file_paths = []
     all_ids = []
