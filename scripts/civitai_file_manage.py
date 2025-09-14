@@ -500,6 +500,7 @@ def model_from_sent(model_name, content_type):
                     output_html = convert_local_images(output_html)
 
     if not output_html:
+        api_response = None
         modelID = get_models(model_file, True)
         if not modelID or modelID == 'Model not found':
             output_html = _api.api_error_msg('not_found')
@@ -508,15 +509,32 @@ def model_from_sent(model_name, content_type):
             output_html = _api.api_error_msg('offline')
             modelID_failed = True
         if not modelID_failed:
-            json_data = _api.request_civit_api(f"https://civitai.com/api/v1/models?ids={modelID}&nsfw=true")
-        else:
-            json_data = None
+            api_response = _api.request_civit_api(f"https://civitai.com/api/v1/models?ids={modelID}&nsfw=true")
+        if modelID_failed or api_response in ['timeout', 'error', 'offline']:
+            return gr.Textbox.update(value='<p>ERROR</p>', placeholder=_download.random_number()),  # Preview HTML
 
-        if not isinstance(json_data, dict):
-            output_html = _api.api_error_msg(json_data)
+        # Get SHA256 hash for the file to find the specific version
+        file_sha256 = None
+        json_file = os.path.splitext(model_file)[0] + '.json'
+        if os.path.exists(json_file):
+            try:
+                with open(json_file, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    file_sha256 = data.get('sha256')
+            except Exception as e:
+                print(f"Failed to read {json_file}: {e}")
+        # Find the specific model version based on SHA256 or filename
+        if file_sha256:
+            model_version, item = find_model_version_by_sha256(api_response, file_sha256)
         else:
-            model_versions = _api.update_model_versions(modelID, json_data)
-            output_html = _api.update_model_info(None, model_versions.get('value'), True, modelID, json_data, True)
+            model_version, item = find_model_version_by_filename(api_response, model_file)
+        if model_version and item:
+            # Use the specific model version name for HTML generation
+            output_html = _api.update_model_info(None, model_version.get('name'), True, modelID, api_response, True)
+        else:
+            # Fallback to first version if specific version not found
+            model_versions = _api.update_model_versions(modelID, api_response)
+            output_html = _api.update_model_info(None, model_versions.get('value'), True, modelID, api_response, True)
 
     css_path = Path(__file__).resolve().parents[1] / 'style_html.css'
     with open(css_path, 'r', encoding='utf-8') as css_file:
@@ -527,12 +545,7 @@ def model_from_sent(model_name, content_type):
     output_html = str(head_section + output_html)
 
     debug_print(output_html)
-
-    number = _download.random_number()
-
-    return (
-        gr.Textbox.update(value=output_html, placeholder=number),  # Preview HTML
-    )
+    return gr.Textbox.update(value=output_html, placeholder=_download.random_number()),  # Preview HTML
 
 def send_to_browser(model_name, content_type, click_first_item):
     modelID_failed = False
@@ -1158,8 +1171,6 @@ def file_scan(folders, tag_finish, installed_finish, preview_finish, overwrite_t
             gr.Textbox.update(value=number)
         )
 
-    updated_models = []
-    outdated_models = []
     all_model_ids = []
     file_paths = []
     all_ids = []
