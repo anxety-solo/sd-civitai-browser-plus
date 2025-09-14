@@ -831,6 +831,13 @@ def update_model_info(model_string=None, model_version=None, only_html=False, in
                 model_date_published = selected_version.get('publishedAt', '').split('T')[0]
                 version_name = selected_version['name']
                 version_id = selected_version['id']
+                version_about = selected_version.get('description', '')
+                if version_about is not None and version_about.strip():
+                    version_about = version_about.replace('<code>', '<code style="text-wrap: wrap">')
+                    if model_desc:
+                        model_desc += '\n<hr>\n<h3>About this version:</h3>\n' + version_about.strip()
+                    else:
+                        model_desc = '<h3>About this version:</h3>\n' + version_about.strip()
 
                 if selected_version['trainedWords']:
                     output_training = ','.join(selected_version['trainedWords'])
@@ -1039,7 +1046,7 @@ def update_model_info(model_string=None, model_version=None, only_html=False, in
                 model_page = (
                     '<div class="model-page-line">'
                         '<span class="page-label">Model Page:</span>'
-                        f'<a href={model_main_url} target="_blank">{escape(str(model_name))}</a>'
+                        f'<a href={model_main_url}?modelVersionId={selected_version["id"]} target="_blank">{escape(str(model_name))}</a>'
                     '</div>'
                 )
 
