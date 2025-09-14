@@ -762,7 +762,7 @@ def on_ui_tabs():
 
         def save_images_wrapper(preview_html, model_filename, install_path, sub_folder, model_id):
             """Wrapper function to save images with API response data"""
-            print(f"Save Images Debug: model_id={model_id}, preview_html_length={len(preview_html) if preview_html else 0}")
+            # print(f"Save Images Debug: model_id={model_id}, preview_html_length={len(preview_html) if preview_html else 0}")
 
             # Generate proper HTML with images if preview_html is empty or doesn't contain images
             if not preview_html or 'data-sampleimg="true"' not in preview_html:
@@ -796,7 +796,6 @@ def on_ui_tabs():
                 try:
                     debug_print(f"Fetching API data for model {model_id}")
                     api_response = _api.request_civit_api(f"https://civitai.com/api/v1/models/{model_id}")
-                    # Ensure preview_html is a string
                     if not isinstance(preview_html, str):
                         preview_html = str(preview_html) if preview_html else ""
                     _file.save_images(preview_html, model_filename, install_path, sub_folder, api_response=api_response)
@@ -805,7 +804,6 @@ def on_ui_tabs():
                     debug_print(f"Error fetching API data: {e}")
             # Fallback to save without API response
             debug_print(f"Using fallback save method")
-            # Ensure preview_html is a string
             if not isinstance(preview_html, str):
                 preview_html = str(preview_html) if preview_html else ""
             _file.save_images(preview_html, model_filename, install_path, sub_folder)
@@ -1086,112 +1084,7 @@ def on_ui_settings():
             return self
         shared.OptionInfo.info = info
 
-    # Download Options
-    shared.opts.add_option(
-        'use_aria2',
-        shared.OptionInfo(
-            default=True,
-            label='Download models using Aria2',
-            section=download,
-            category_id=cat_id
-        ).info("Disable this option if you're experiencing any issues with downloads or if you want to use a proxy.")
-    )
-
-    shared.opts.add_option(
-        'disable_dns',
-        shared.OptionInfo(
-            default=False,
-            label='Disable Async DNS for Aria2',
-            section=download,
-            category_id=cat_id
-        ).info('Useful for users who use PortMaster or other software that controls the DNS')
-    )
-
-    shared.opts.add_option(
-        'show_log',
-        shared.OptionInfo(
-            default=False,
-            label='Show Aria2 logs in console',
-            section=download,
-            category_id=cat_id
-        ).info('Requires UI reload')
-    )
-
-    shared.opts.add_option(
-        'split_aria2',
-        shared.OptionInfo(
-            default=64,
-            label='Number of connections to use for downloading a model',
-            component=gr.Slider,
-            component_args=lambda: {'maximum': '64', 'minimum': '1', 'step': '1'},
-            section=download,
-            category_id=cat_id
-        ).info('Only applies to Aria2')
-    )
-
-    shared.opts.add_option(
-        'aria2_flags',
-        shared.OptionInfo(
-            default=r'',
-            label='Custom Aria2 command line flags',
-            section=download,
-            category_id=cat_id
-        ).info('Requires UI reload')
-    )
-
-    shared.opts.add_option(
-        'unpack_zip',
-        shared.OptionInfo(
-            default=True,
-            label='Automatically unpack .zip files after downloading',
-            section=download,
-            category_id=cat_id
-        )
-    )
-
-    shared.opts.add_option(
-        'save_api_info',
-        shared.OptionInfo(
-            default=False,
-            label='Save API info of model when saving model info',
-            section=download,
-            category_id=cat_id
-        ).info('creates an api_info.json file when saving any model info with all the API data of the model')
-    )
-
-    shared.opts.add_option(
-        'auto_save_all_img',
-        shared.OptionInfo(
-            default=False,
-            label='Automatically save all images',
-            section=download,
-            category_id=cat_id
-        ).info('Automatically saves all the images of a model after downloading')
-    )
-
-    shared.opts.add_option(
-        'save_img_count',
-        shared.OptionInfo(
-            default=16,
-            label='Number of images to save',
-            component=gr.Slider,
-            component_args=lambda: {'maximum': '64', 'minimum': '4', 'step': '2'},
-            section=download,
-            category_id=cat_id
-        ).info('Number of images to save when using the Save Images button or when auto_save_all_img is enabled')
-    )
-
-    shared.opts.add_option(
-        'save_html_on_save',
-        shared.OptionInfo(
-            default=False,
-            label='Save HTML file when saving model',
-            section=download,
-            category_id=cat_id
-        ).info('If enabled, saves the HTML file locally when saving a model')
-    )
-
-    # Browser Options
+    ## Browser Options
     shared.opts.add_option(
         'custom_api_key',
         shared.OptionInfo(
@@ -1296,7 +1189,7 @@ def on_ui_settings():
         'resize_preview_size',
         shared.OptionInfo(
             default=512,
-            label='Preview resize size',
+            label='Resize preview size',
             component=gr.Slider,
             component_args=lambda: {'maximum': '1024', 'minimum': '128', 'step': '32'},
             section=browser,
@@ -1416,6 +1309,111 @@ def on_ui_settings():
             section=browser,
             category_id=cat_id
         ).info('Shows debug information in console for API calls and file operations. Requires UI reload')
+    )
+
+    ## Download Options
+    shared.opts.add_option(
+        'use_aria2',
+        shared.OptionInfo(
+            default=True,
+            label='Download models using Aria2',
+            section=download,
+            category_id=cat_id
+        ).info("Disable this option if you're experiencing any issues with downloads or if you want to use a proxy.")
+    )
+
+    shared.opts.add_option(
+        'disable_dns',
+        shared.OptionInfo(
+            default=False,
+            label='Disable Async DNS for Aria2',
+            section=download,
+            category_id=cat_id
+        ).info('Useful for users who use PortMaster or other software that controls the DNS')
+    )
+
+    shared.opts.add_option(
+        'show_log',
+        shared.OptionInfo(
+            default=False,
+            label='Show Aria2 logs in console',
+            section=download,
+            category_id=cat_id
+        ).info('Requires UI reload')
+    )
+
+    shared.opts.add_option(
+        'split_aria2',
+        shared.OptionInfo(
+            default=64,
+            label='Number of connections to use for downloading a model',
+            component=gr.Slider,
+            component_args=lambda: {'maximum': '64', 'minimum': '1', 'step': '1'},
+            section=download,
+            category_id=cat_id
+        ).info('Only applies to Aria2')
+    )
+
+    shared.opts.add_option(
+        'aria2_flags',
+        shared.OptionInfo(
+            default=r'',
+            label='Custom Aria2 command line flags',
+            section=download,
+            category_id=cat_id
+        ).info('Requires UI reload')
+    )
+
+    shared.opts.add_option(
+        'unpack_zip',
+        shared.OptionInfo(
+            default=True,
+            label='Automatically unpack .zip files after downloading',
+            section=download,
+            category_id=cat_id
+        )
+    )
+
+    shared.opts.add_option(
+        'save_api_info',
+        shared.OptionInfo(
+            default=False,
+            label='Save API info of model when saving model info',
+            section=download,
+            category_id=cat_id
+        ).info('creates an api_info.json file when saving any model info with all the API data of the model')
+    )
+
+    shared.opts.add_option(
+        'auto_save_all_img',
+        shared.OptionInfo(
+            default=False,
+            label='Automatically save all images',
+            section=download,
+            category_id=cat_id
+        ).info('Automatically saves all the images of a model after downloading')
+    )
+
+    shared.opts.add_option(
+        'save_img_count',
+        shared.OptionInfo(
+            default=16,
+            label='Number of images to save',
+            component=gr.Slider,
+            component_args=lambda: {'maximum': '64', 'minimum': '4', 'step': '2'},
+            section=download,
+            category_id=cat_id
+        ).info('Number of images to save when using the Save Images button or when auto_save_all_img is enabled')
+    )
+
+    shared.opts.add_option(
+        'save_html_on_save',
+        shared.OptionInfo(
+            default=False,
+            label='Save HTML file when saving model',
+            section=download,
+            category_id=cat_id
+        ).info('If enabled, saves the HTML file locally when saving a model')
     )
 
     # Default sub folders
