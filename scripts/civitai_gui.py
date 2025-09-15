@@ -218,7 +218,7 @@ def on_ui_tabs():
     scan_choices = _file.get_content_choices(scan_choices=True)
 
     with gr.Blocks() as civitai_interface:
-        # Browser Tab
+        ## Browser Tab
         with gr.Tab(label='Browser', elem_id='browserTab'):
             with gr.Row(elem_id='searchRow'):
                 with gr.Accordion(label='', open=False, elem_id=filterBox):
@@ -285,14 +285,14 @@ def on_ui_tabs():
             with gr.Row():
                 preview_html = gr.HTML(elem_id='civitai_preview_html')
 
-        # Update Tab
+        ## Update Tab
         with gr.Tab(label='Update Models', elem_id='updateTab'):
             with gr.Row():
                 selected_tags = gr.CheckboxGroup(elem_id='selected_tags', label='Selected content types:', choices=scan_choices, value=['All'])
             with gr.Row(elem_id='civitai_update_toggles'):
-                overwrite_toggle = gr.Checkbox(elem_id='overwrite_toggle', label='Overwrite any existing files. (previews, HTMLs, tags, descriptions)', value=True, min_width=300)
-                skip_hash_toggle = gr.Checkbox(elem_id='skip_hash_toggle', label='One-Time Hash Generation for externally downloaded models.', value=True, min_width=300)
-                do_html_gen = gr.Checkbox(elem_id='do_html_gen', label='Save HTML file for each model when updating info & tags (increases process time).', value=False, min_width=300)
+                overwrite_toggle = gr.Checkbox(elem_id='overwrite_toggle', label='Overwrite any existing files (previews, HTMLs, tags, descriptions)', value=True, min_width=300)
+                skip_hash_toggle = gr.Checkbox(elem_id='skip_hash_toggle', label='One-Time Hash Generation for externally downloaded models', value=True, min_width=300)
+                do_html_gen = gr.Checkbox(elem_id='do_html_gen', label='Save HTML file for each model when updating info & tags', value=False, min_width=300)
             with gr.Row():
                 save_all_tags = gr.Button(value='Update model info & tags', interactive=True, visible=True)
                 cancel_all_tags = gr.Button(value='Cancel updating model info & tags', interactive=False, visible=False)
@@ -315,7 +315,7 @@ def on_ui_tabs():
             with gr.Row():
                 organize_progress = gr.HTML(value='<div style="min-height: 0px;"></div>')
 
-        # Queue Tab
+        ## Queue Tab
         with gr.Tab(label='Download Queue', elem_id='queueTab'):
 
             def get_style(size, left_border):
@@ -1092,7 +1092,7 @@ def on_ui_settings():
             label='Personal CivitAI API key',
             section=browser,
             category_id=cat_id
-        ).info('You can create your own API key in your CivitAI account settings, this required for some downloads, Requires UI reload')
+        ).info('You can create your own API key in your CivitAI account settings, this required for some downloads. Requires UI reload')
     )
 
     shared.opts.add_option(
@@ -1152,7 +1152,7 @@ def on_ui_settings():
             label='Page navigation as header',
             section=browser,
             category_id=cat_id
-        ).info('Keeps the page navigation always visible at the top, Requires UI reload')
+        ).info('Keeps the page navigation always visible at the top. Requires UI reload')
     )
 
     shared.opts.add_option(

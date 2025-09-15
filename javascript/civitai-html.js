@@ -1145,6 +1145,7 @@ function insertGuideMessage(html_input) {
     }
 }
 
+// === ANXETY EDITs ===
 // Runs all functions when the page is fully loaded
 function onPageLoad() {
     updateSVGIcons();
@@ -1171,6 +1172,8 @@ function onPageLoad() {
     let toggle4 = document.getElementById('toggle4');
     let hash_toggle_hover = document.querySelector('#skip_hash_toggle > label');
     let hash_toggle = document.querySelector('#skip_hash_toggle');
+    let do_html_gen_hover = document.querySelector('#do_html_gen > label');
+    let do_html_gen = document.querySelector('#do_html_gen');
 
     if (toggle4L || toggle4) {
         let like_toggle = toggle4L || toggle4;
@@ -1182,6 +1185,12 @@ function onPageLoad() {
         let insertText =
             'This option generates unique hashes for models that were not downloaded with this extension.\nA hash is required for any of the options below to work, a model with no hash will be skipped.\nInitial hash generation is a one-time process per file.';
         createTooltip(hash_toggle, hash_toggle_hover, insertText);
+    }
+
+    if (do_html_gen) {
+        let insertText =
+            'This option requires the "Save HTML file when saving model" option to be enabled.\nYou can find this setting in the CivitAI Browser+ settings under Downloads section.';
+        createTooltip(do_html_gen, do_html_gen_hover, insertText);
     }
 
     addOnClickToButtons();

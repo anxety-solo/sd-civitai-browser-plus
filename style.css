@@ -276,12 +276,8 @@
     position: -webkit-sticky;
     position: sticky;
     top: 0;
-    background-color: var(--neutral-950);
+    background: color-mix(in srgb, var(--background-fill-primary) 85%, transparent);
     z-index: 60;
-}
-
-.acss-14flpmm .gap:has(#quicksettings0):first-child {
-    gap: var(--layout-gap);
 }
 
 #txt2img_seed > label > input {
