@@ -3,9 +3,10 @@
 > _Treat this fork as an author's vision – it's not a fork that will fix absolutely every problem..._</br>
 > You can report bugs to me and I'll try to fix them! :33
 
-> [!Note]
-> **Important**: The extension has been significantly rewritten, so it may not process your existing models correctly.</br>
-> _Be sure to update your HTML/JSON files..._
+> [!Important]
+> The extension has been significantly rewritten, so it may not process your existing models correctly.</br>
+> _Be sure to update your HTML/JSON files..._</br>
+> **Don’t forget to visit the extension settings!** _(default settings have been changed)_
 
 ## ✨ Key features and changes in this fork:
 

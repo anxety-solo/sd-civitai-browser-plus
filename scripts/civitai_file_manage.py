@@ -907,7 +907,7 @@ def find_and_save(api_response, sha256=None, file_name=None, json_file=None, no_
                 content['modelVersionId'] = model_version.get('id')
                 changed = True
             if 'modelPageURL' not in content:
-                content['modelPageURL'] = f"https://civitai.com/models/{item.get('id')}"
+                content['modelPageURL'] = f"https://civitai.com/models/{item.get('id')}?modelVersionId={model_version.get('id')}"
                 changed = True
         else:
             content['activation text'] = trained_tags
@@ -917,7 +917,7 @@ def find_and_save(api_response, sha256=None, file_name=None, json_file=None, no_
             # Always update these fields when overwrite is enabled
             content['modelId'] = item.get('id')
             content['modelVersionId'] = model_version.get('id')
-            content['modelPageURL'] = f"https://civitai.com/models/{item.get('id')}"
+            content['modelPageURL'] = f"https://civitai.com/models/{item.get('id')}?modelVersionId={model_version.get('id')}"
             changed = True
 
         with open(json_file, 'w', encoding='utf-8') as f:
@@ -982,7 +982,7 @@ def get_models(file_path, gen_hash=None):
 
                     data['modelId'] = modelId
                     data['modelVersionId'] = modelVersionId
-                    data['modelPageURL'] = f"https://civitai.com/models/{modelId}"
+                    data['modelPageURL'] = f"https://civitai.com/models/{modelId}?modelVersionId={modelVersionId}"
                     data['sha256'] = sha256.upper()
 
                     with open(json_file, 'w', encoding='utf-8') as f:
@@ -993,7 +993,7 @@ def get_models(file_path, gen_hash=None):
                 data = {
                     'modelId': modelId,
                     'modelVersionId': modelVersionId,
-                    'modelPageUrl': f"https://civitai.com/models/{modelId}",
+                    'modelPageUrl': f"https://civitai.com/models/{modelId}?modelVersionId={modelVersionId}",
                     'sha256': sha256.upper()
                 }
                 with open(json_file, 'w', encoding='utf-8') as f:

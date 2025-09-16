@@ -515,6 +515,11 @@ function createCivitaiOverlay(noMessage = false) {
     overlay.appendChild(inner);
     document.body.appendChild(overlay);
 
+    // Trigger animation after DOM is ready
+    setTimeout(() => {
+        overlay.classList.add('show');
+    }, 10);
+
     // Store reference for cleanup
     window.currentCivitaiOverlay = overlay;
 }
@@ -539,6 +544,11 @@ function handleOverlayKeyPress(event) {
 function hideCivitaiOverlay() {
     const overlay = document.querySelector('.civitai-overlay');
     if (overlay) {
+        // Start fade out animation
+        overlay.classList.remove('show');
+        
+        // Wait for animation to complete before removing from DOM
+        setTimeout(() => {
         // Remove event listeners
         overlay.removeEventListener('click', handleOverlayClick);
         document.removeEventListener('keydown', handleOverlayKeyPress);
@@ -551,6 +561,7 @@ function hideCivitaiOverlay() {
 
         // Clear reference
         window.currentCivitaiOverlay = null;
+        }, 300); // Match the CSS transition duration
     }
 }
 
@@ -584,13 +595,22 @@ function inputHTMLPreviewContent(html_input) {
             // Create content container
             const modelInfo = document.createElement('div');
             modelInfo.innerHTML = extractedText;
+            modelInfo.style.opacity = '0';
+            modelInfo.style.transform = 'translateY(20px)';
+            modelInfo.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
             inner.appendChild(modelInfo);
 
             // Allow inner container to expand to content height
             inner.style.height = 'auto';
 
-            // Initialize description toggle after content is loaded
-            setTimeout(() => initDescriptionToggle('preview-'), 100);
+            // Animate content appearance
+            requestAnimationFrame(() => {
+                modelInfo.style.opacity = '1';
+                modelInfo.style.transform = 'translateY(0)';
+            });
+
+            // Initialize description toggle
+            setTimeout(() => initDescriptionToggle('preview-'), 50);
         }
     }
 }

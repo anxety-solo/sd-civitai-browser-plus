@@ -1403,7 +1403,7 @@ def on_ui_settings():
             component_args=lambda: {'maximum': '64', 'minimum': '4', 'step': '2'},
             section=download,
             category_id=cat_id
-        ).info('Number of images to save when using the Save Images button or when auto_save_all_img is enabled')
+        ).info('Number of images to save when using the Save Images button or when Automatically save all images is enabled')
     )
 
     shared.opts.add_option(
