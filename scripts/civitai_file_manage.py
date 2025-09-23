@@ -174,7 +174,7 @@ def delete_associated_files(directory, base_name):
                 print(f'Associated file deleted: {file_path}')
             continue
 
-        # Delete images matching pattern: base_name_<number>.<ext>
+        # Delete images matching pattern: <base_name>_<number>.<ext>
         if name.startswith(f'{base_name}_') and ext.lower() in image_exts:
             suffix = name[len(f'{base_name}_'):]
             if suffix.isdigit():

@@ -317,7 +317,7 @@ function setupClickOutsideListener() {
 
 // Create hyperlink in settings to CivitAI account settings
 function createLink(infoElement) {
-    const existingText = '(You can create your own API key in your CivitAI account settings, this required for some downloads, Requires UI reload)';
+    const existingText = '(You can create your own API key in your CivitAI account settings, this required for some downloads. Requires UI reload)';
     const linkText = 'CivitAI account settings';
 
     const [textBefore, textAfter] = existingText.split(linkText);
@@ -1401,8 +1401,10 @@ function closeImageViewer() {
         overlay.style.display = 'none';
         overlay.classList.remove('closing');
 
-        // Restore body scroll
-        document.body.style.overflow = 'auto';
+        // Restore body scroll only if civitai overlay is not open
+        if (!document.querySelector('.civitai-overlay')) {
+            document.body.style.overflow = 'auto';
+        }
 
         // Cleanup event listeners
         cleanupViewerEventListeners();
