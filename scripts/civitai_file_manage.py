@@ -544,7 +544,7 @@ def model_from_sent(model_name, content_type):
     head_section = f'<head>{style_tag}</head>'
     output_html = str(head_section + output_html)
 
-    debug_print(output_html)
+    # debug_print(output_html)
     return gr.Textbox.update(value=output_html, placeholder=_download.random_number()),  # Preview HTML
 
 def send_to_browser(model_name, content_type, click_first_item):

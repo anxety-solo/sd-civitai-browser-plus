@@ -917,108 +917,130 @@ def update_model_info(model_string=None, model_version=None, only_html=False, in
                 }
                 preferred_order = ["prompt", "negativePrompt", "Model", "sampler", "steps", "cfgScale", "Clip skip", "seed", "Size"]
 
-                for idx, pic in enumerate(api_version['images']):
-                    index = f"preview_{idx}" if from_preview else idx
-                    prompt_dict = pic.get('meta', {}) or {}
-                    image_url = re.sub(r'/width=\d+', f'/width={pic.get("width", "")}', pic['url'])
-                    is_video = pic.get('type') == 'video'
+                # Check if api_version is a valid dictionary (not an error string)
+                if isinstance(api_version, dict) and 'images' in api_version:
+                    for idx, pic in enumerate(api_version['images']):
+                        index = f"preview_{idx}" if from_preview else idx
+                        prompt_dict = pic.get('meta', {}) or {}
+                        image_url = re.sub(r'/width=\d+', f'/width={pic.get("width", "")}', pic['url'])
+                        is_video = pic.get('type') == 'video'
 
-                    img_html += (
-                        f'<div class="image-block">'
-                        f'<div class="civitai-image-container">'
-                    )
-
-                    if is_video:
-                        video_url = image_url.replace('width=', 'transcode=true,width=')
                         img_html += (
-                            f'<video class="preview-media" data-sampleimg="true" {playback} muted playsinline onclick="openImageViewer(\'{escape(video_url)}\', \'video\')">'
-                            f'<source src="{video_url}" type="video/mp4"></video>'
+                            f'<div class="image-block">'
+                            f'<div class="civitai-image-container">'
                         )
-                        meta_button = False
-                        prompt_dict = {}
-                    else:
-                        img_html += (
-                            f'<img class="preview-media" data-sampleimg="true" src="{image_url}" alt="Model preview" onclick="openImageViewer(\'{escape(image_url)}\', \'image\')">'
-                        )
-                        meta_button = bool(prompt_dict.get('prompt'))
 
-                    if meta_button:
-                        img_html += (
-                            '<div class="civitai_txt2img">'
-                            f'<label onclick="sendImgUrl(\'{escape(image_url)}\')" class="civitai-txt2img-btn">Send to txt2img</label>'
-                            '</div>'
-                        )
-                    img_html += '</div>'  # close .civitai-image-container
-
-                    if prompt_dict:
-                        img_html += (
-                            '<div id="image_info">'
-                            '<dl>'
-                        )
-                        for key in preferred_order:
-                            if key in prompt_dict:
-                                value = prompt_dict[key]
-                                key_disp = key_map.get(key, key)
-                                if meta_btn:
-                                    img_html += (
-                                        f'<div class="civitai-meta-btn" data-key="{key}" onclick="metaToTxt2Img(\'{escape(str(key_disp))}\', this)">'
-                                        f'<dt>{escape(str(key_disp))}</dt><dd>{escape(str(value))}</dd></div>'
-                                    )
-                                else:
-                                    img_html += (
-                                        f'<div class="civitai-meta" data-key="{key}"><dt>{escape(str(key_disp))}</dt><dd>{escape(str(value))}</dd></div>'
-                                    )
-                        # Check if there are remaining keys in meta
-                        remaining_keys = [k for k in prompt_dict if k not in preferred_order]
-
-                        # Add the rest
-                        if remaining_keys:
-                            img_html += (
-                                '<div class="tabs">'
-                                '<div class="tab">'
-                                f'<input type="checkbox" class="accordionCheckbox" id="chck{index}">'
-                                f'<label class="tab-label" for="chck{index}">More details...</label>'
-                                '<div class="tab-content">'
-                            )
-                            for key in remaining_keys:
-                                value = prompt_dict[key]
-                                img_html += (
-                                    f'<div class="civitai-meta" data-key="{key}"><dt>{escape(str(key).capitalize())}</dt><dd>{escape(str(value))}</dd></div>'
-                                )
-                            img_html += '</div></div></div>'
-                        img_html += '</dl></div>'
-                    else:
-                        # Show beautiful empty state when no metadata is available
                         if is_video:
-                            no_meta_type = "video"
-                            icon_svg = (
-                                '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">'
-                                '<rect x="3" y="5" width="18" height="14" rx="2" ry="2"></rect>'
-                                '<polygon points="10,9 16,12 10,15"></polygon>'
-                                '</svg>'
+                            video_url = image_url.replace('width=', 'transcode=true,width=')
+                            img_html += (
+                                f'<video class="preview-media" data-sampleimg="true" {playback} muted playsinline onclick="openImageViewer(\'{escape(video_url)}\', \'video\')">'
+                                f'<source src="{video_url}" type="video/mp4"></video>'
                             )
+                            meta_button = False
+                            prompt_dict = {}
                         else:
-                            no_meta_type = "image"
-                            icon_svg = (
-                                '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">'
-                                '<path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>'
-                                '<polyline points="14,2 14,8 20,8"></polyline>'
-                                '<path d="M12 18v-4"></path>'
-                                '<path d="M12 10h.01"></path>'
-                                '</svg>'
+                            img_html += (
+                                f'<img class="preview-media" data-sampleimg="true" src="{image_url}" alt="Model preview" onclick="openImageViewer(\'{escape(image_url)}\', \'image\')">'
                             )
-                        img_html += (
+                            meta_button = bool(prompt_dict.get('prompt'))
+
+                        if meta_button:
+                            img_html += (
+                                '<div class="civitai_txt2img">'
+                                f'<label onclick="sendImgUrl(\'{escape(image_url)}\')" class="civitai-txt2img-btn">Send to txt2img</label>'
+                                '</div>'
+                            )
+                        img_html += '</div>'  # close .civitai-image-container
+
+                        if prompt_dict:
+                            img_html += (
+                                '<div id="image_info">'
+                                '<dl>'
+                            )
+                            for key in preferred_order:
+                                if key in prompt_dict:
+                                    value = prompt_dict[key]
+                                    key_disp = key_map.get(key, key)
+                                    if meta_btn:
+                                        img_html += (
+                                            f'<div class="civitai-meta-btn" data-key="{key}" onclick="metaToTxt2Img(\'{escape(str(key_disp))}\', this)">'
+                                            f'<dt>{escape(str(key_disp))}</dt><dd>{escape(str(value))}</dd></div>'
+                                        )
+                                    else:
+                                        img_html += (
+                                            f'<div class="civitai-meta" data-key="{key}"><dt>{escape(str(key_disp))}</dt><dd>{escape(str(value))}</dd></div>'
+                                        )
+                            # Check if there are remaining keys in meta
+                            remaining_keys = [k for k in prompt_dict if k not in preferred_order]
+
+                            # Add the rest
+                            if remaining_keys:
+                                img_html += (
+                                    '<div class="tabs">'
+                                    '<div class="tab">'
+                                    f'<input type="checkbox" class="accordionCheckbox" id="chck{index}">'
+                                    f'<label class="tab-label" for="chck{index}">More details...</label>'
+                                    '<div class="tab-content">'
+                                )
+                                for key in remaining_keys:
+                                    value = prompt_dict[key]
+                                    img_html += (
+                                        f'<div class="civitai-meta" data-key="{key}"><dt>{escape(str(key).capitalize())}</dt><dd>{escape(str(value))}</dd></div>'
+                                    )
+                                img_html += '</div></div></div>'
+                            img_html += '</dl></div>'
+                        else:
+                            # Show beautiful empty state when no metadata is available
+                            if is_video:
+                                no_meta_type = "video"
+                                icon_svg = (
+                                    '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">'
+                                    '<rect x="3" y="5" width="18" height="14" rx="2" ry="2"></rect>'
+                                    '<polygon points="10,9 16,12 10,15"></polygon>'
+                                    '</svg>'
+                                )
+                            else:
+                                no_meta_type = "image"
+                                icon_svg = (
+                                    '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">'
+                                    '<path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>'
+                                    '<polyline points="14,2 14,8 20,8"></polyline>'
+                                    '<path d="M12 18v-4"></path>'
+                                    '<path d="M12 10h.01"></path>'
+                                    '</svg>'
+                                )
+                            img_html += (
+                                '<div class="image-metadata-empty">'
+                                '<div class="empty-state-icon">'
+                                f'{icon_svg}'
+                                '</div>'
+                                '<div class="empty-state-text">'
+                                f'<h4>No metadata available</h4>'
+                                f'<p>No generation settings are available for this {no_meta_type}.</p>'
+                                '</div>'
+                                '</div>'
+                            )
+                        img_html += '</div>'  # close .image-block
+                    img_html += '</div>'
+                else:
+                    # Handle API error case - show error message instead of images
+                    img_html += (
+                        '<div class="image-block-empty">'
                             '<div class="image-metadata-empty">'
-                            '<div class="empty-state-icon">'
-                            f'{icon_svg}'
+                                '<div class="empty-state-icon">'
+                                    '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">'
+                                    '<circle cx="12" cy="12" r="10"></circle>'
+                                    '<line x1="12" y1="8" x2="12" y2="12"></line>'
+                                    '<line x1="12" y1="16" x2="12.01" y2="16"></line>'
+                                    '</svg>'
+                                '</div>'
+                                '<div class="empty-state-text">'
+                                    '<h4>Unable to load preview images</h4>'
+                                    '<p>There was an error loading the model preview. The model information may still be available.</p>'
+                                '</div>'
                             '</div>'
-                            '<div class="empty-state-text">'
-                            f'<h4>No metadata available</h4>'
-                            f'<p>No generation settings are available for this {no_meta_type}.</p>'
-                            '</div>'
-                            '</div>'
-                        )
-                    img_html += '</div>'  # close .image-block
+                        '</div>'
+                    )
                 img_html += '</div>'
 
                 # (Image viewer overlay is created dynamically in JavaScript)

@@ -18,7 +18,7 @@ from modules.shared import opts, cmd_opts
 import scripts.civitai_file_manage as _file
 import scripts.civitai_global as gl
 import scripts.civitai_api as _api
-from scripts.civitai_global import print
+from scripts.civitai_global import print, debug_print
 
 try:
     from zip_unicode import ZipHandler
@@ -148,7 +148,12 @@ def create_model_item(dl_url, model_filename, install_path, model_name, version_
 
     model_json = {'items': filtered_items}
     model_versions = _api.update_model_versions(model_id)
-    (preview_html, _, _, _, _, _, _, _, _, _, _, existing_path, _) = _api.update_model_info(None, model_versions.get('value'), False, model_id)
+    try:
+        (preview_html, _, _, _, _, _, _, _, _, _, _, existing_path, _) = _api.update_model_info(None, model_versions.get('value'), False, model_id)
+    except Exception as e:
+        debug_print(f"Error processing model {model_id}: {e}")
+        # Return None to skip this model
+        return None
 
     for item in gl.download_queue:
         if item['dl_url'] == dl_url:
@@ -239,6 +244,8 @@ def selected_to_queue(model_list, subfolder, download_start, create_json, curren
         if model_item:
             gl.download_queue.append(model_item)
             total_count += 1
+        else:
+            debug_print(f"Skipped model {model_name} ({model_id}) due to processing error")
 
     html = download_manager_html(current_html)
 
@@ -292,7 +299,17 @@ def download_start(download_start, dl_url, model_filename, install_path, model_s
         model_name, _ = _api.extract_model_info(model_string)
     model_item = create_model_item(dl_url, model_filename, install_path, model_name, version_name, model_sha256, model_id, create_json)
 
-    gl.download_queue.append(model_item)
+    if model_item:
+        gl.download_queue.append(model_item)
+    else:
+        return (
+            gr.Button.update(interactive=True, visible=True),  # Download Button
+            gr.Button.update(interactive=False, visible=False),  # Cancel Button
+            gr.Button.update(interactive=False, visible=False),  # Cancel All Button
+            gr.Textbox.update(value=download_start),  # Download Start Trigger
+            gr.HTML.update(value='<div style="min-height: 100px;"></div>'),  # Download Progress
+            gr.HTML.update(value=current_html)  # Download Manager HTML
+        )
 
     if len(gl.download_queue) > 1:
         number = download_start

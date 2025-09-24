@@ -1136,10 +1136,24 @@
 }
 
 /* Empty state for missing metadata */
+/* Full-width error block */
+#civitai_preview_html .sampleimgs .image-block-empty {
+    display: flex;
+    grid-column: 1 / -1;
+    flex-direction: column;
+    margin: 0;
+    border-radius: 16px;
+    align-items: center;
+    justify-content: center;
+}
+
 #civitai_preview_html .image-metadata-empty {
     display: flex;
     flex-direction: column;
+    box-sizing: border-box;
     padding: 32px 16px;
+    width: 100%;
+    min-width: 100%;
     color: var(--body-text-color-subdued);
     background: var(--background-fill-secondary);
     border: 2px dashed var(--border-color-accent);
