@@ -254,10 +254,16 @@
 
 #togglesL {
     margin-top: 3px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 #toggles {
     margin-top: -10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 #searchType > div {
@@ -297,7 +303,8 @@
 #toggle3,
 #toggle4,
 #toggle4_api,
-#toggle5 {
+#toggle5,
+#toggle6 {
     margin-top: 5px;
     margin-right: 0px;
     margin-left: 0px;
@@ -321,6 +328,7 @@
 #toggle4L,
 #toggle4L_api,
 #toggle5L,
+#toggle6L,
 #overwrite_toggle,
 #skip_hash_toggle,
 #do_html_gen {

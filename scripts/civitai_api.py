@@ -422,7 +422,7 @@ def _search_by_sha256(sha256_hash):
     except (requests.exceptions.RequestException, Exception):
         return 'error'
 
-def create_api_url(content_type=None, sort_type=None, period_type=None, use_search_term=None, base_filter=None, only_liked=None, tile_count=None, search_term=None, nsfw=None, isNext=None):
+def create_api_url(content_type=None, sort_type=None, period_type=None, use_search_term=None, base_filter=None, only_liked=None, tile_count=None, search_term=None, nsfw=None, exact_search=None, isNext=None):
     base_url = 'https://civitai.com/api/v1/models'
     version_url = 'https://civitai.com/api/v1/model-versions'
 
@@ -439,6 +439,13 @@ def create_api_url(content_type=None, sort_type=None, period_type=None, use_sear
     ## === ANXETY EDITs ===
     if use_search_term != 'None' and search_term:
         search_term = search_term.replace('\\', '\\\\').lower()
+
+        # Apply exact search logic - wrap search term in quotes if exact_search is True
+        if exact_search and use_search_term in ['Model name', 'User name', 'Tag']:
+            # Only wrap in quotes if not already wrapped and contains spaces
+            if not (search_term.startswith('"') and search_term.endswith('"')) and ' ' in search_term:
+                search_term = f'"{search_term}"'
+
         if 'civitai.com' in search_term:
             if '/api/download/models' in search_term:
                 # Extract version ID from download URL
@@ -501,9 +508,9 @@ def convert_LORA_LoCon(content_type):
     return content_type
 
 ## === ANXETY EDITs ===
-def initial_model_page(content_type=None, sort_type=None, period_type=None, use_search_term=None, search_term=None, current_page=None, base_filter=None, only_liked=None, nsfw=None, tile_count=None, from_update_tab=False):
+def initial_model_page(content_type=None, sort_type=None, period_type=None, use_search_term=None, search_term=None, current_page=None, base_filter=None, only_liked=None, nsfw=None, exact_search=None, tile_count=None, from_update_tab=False):
     content_type = convert_LORA_LoCon(content_type)
-    current_inputs = (content_type, sort_type, period_type, use_search_term, search_term, tile_count, base_filter, nsfw)
+    current_inputs = (content_type, sort_type, period_type, use_search_term, search_term, tile_count, base_filter, nsfw, exact_search)
     if current_inputs != gl.previous_inputs and gl.previous_inputs != None or not current_page:
         current_page = 1
     gl.previous_inputs = current_inputs
@@ -518,7 +525,7 @@ def initial_model_page(content_type=None, sort_type=None, period_type=None, use_
                 gl.json_data = _search_by_sha256(search_term)
                 gl.url_list = {1: f"sha256_search_{search_term.strip().upper()}" if isinstance(gl.json_data, dict) else 'error'}
             else:
-                api_url = create_api_url(content_type, sort_type, period_type, use_search_term, base_filter, only_liked, tile_count, search_term, nsfw)
+                api_url = create_api_url(content_type, sort_type, period_type, use_search_term, base_filter, only_liked, tile_count, search_term, nsfw, exact_search)
                 gl.url_list = {1: api_url}
                 gl.json_data = request_civit_api(api_url)
         else:
@@ -573,15 +580,15 @@ def initial_model_page(content_type=None, sort_type=None, period_type=None, use_
         gr.Textbox.update(value=None)                                           # Model Filename
     )
 
-def prev_model_page(content_type, sort_type, period_type, use_search_term, search_term, current_page, base_filter, only_liked, nsfw, tile_count):
-    return next_model_page(content_type, sort_type, period_type, use_search_term, search_term, current_page, base_filter, only_liked, nsfw, tile_count, isNext=False)
+def prev_model_page(content_type, sort_type, period_type, use_search_term, search_term, current_page, base_filter, only_liked, nsfw, exact_search, tile_count):
+    return next_model_page(content_type, sort_type, period_type, use_search_term, search_term, current_page, base_filter, only_liked, nsfw, exact_search, tile_count, isNext=False)
 
-def next_model_page(content_type, sort_type, period_type, use_search_term, search_term, current_page, base_filter, only_liked, nsfw, tile_count, isNext=True):
+def next_model_page(content_type, sort_type, period_type, use_search_term, search_term, current_page, base_filter, only_liked, nsfw, exact_search, tile_count, isNext=True):
     content_type = convert_LORA_LoCon(content_type)
 
-    current_inputs = (content_type, sort_type, period_type, use_search_term, search_term, tile_count, base_filter, nsfw)
+    current_inputs = (content_type, sort_type, period_type, use_search_term, search_term, tile_count, base_filter, nsfw, exact_search)
     if current_inputs != gl.previous_inputs and gl.previous_inputs != None:
-        return initial_model_page(content_type, sort_type, period_type, use_search_term, search_term, current_page, base_filter, only_liked, nsfw, tile_count)
+        return initial_model_page(content_type, sort_type, period_type, use_search_term, search_term, current_page, base_filter, only_liked, nsfw, exact_search, tile_count)
 
     api_url = create_api_url(isNext=isNext)
     gl.json_data = request_civit_api(api_url)

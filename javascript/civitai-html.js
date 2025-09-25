@@ -546,7 +546,7 @@ function hideCivitaiOverlay() {
     if (overlay) {
         // Start fade out animation
         overlay.classList.remove('show');
-        
+
         // Wait for animation to complete before removing from DOM
         setTimeout(() => {
         // Remove event listeners

@@ -21,7 +21,7 @@ from scripts.civitai_global import print, debug_print
 gl.init()
 
 
-def saveSettings(ust, ct, pt, st, bf, cj, ol, hi, sn, ss, ts):
+def saveSettings(ust, ct, pt, st, bf, cj, ol, hi, sn, es, ss, ts):
     config = cmd_opts.ui_config_file
 
     # Create a dictionary to map the settings to their respective variables
@@ -36,6 +36,7 @@ def saveSettings(ust, ct, pt, st, bf, cj, ol, hi, sn, ss, ts):
         'civitai_interface/Liked models only/value': ol,
         'civitai_interface/Hide installed models/value': hi,
         'civitai_interface/NSFW content/value': sn,
+        'civitai_interface/Exact search/value': es,
         'civitai_interface/Tile size:/value': ss,
         'civitai_interface/Tile count:/value': ts
     }
@@ -198,6 +199,7 @@ def on_ui_tabs():
     toggle2 = 'toggle2L' if lobe_directory else 'toggle2'
     toggle3 = 'toggle3L' if lobe_directory else 'toggle3'
     toggle5 = 'toggle5L' if lobe_directory else 'toggle5'
+    toggle6 = 'toggle6L' if lobe_directory else 'toggle6'
     refreshbtn = 'refreshBtnL' if lobe_directory else 'refreshBtn'
     filterBox = 'filterBoxL' if lobe_directory else 'filterBox'
 
@@ -232,11 +234,12 @@ def on_ui_tabs():
                         period_type = gr.Dropdown(label='Time period:', choices=['All Time', 'Year', 'Month', 'Week', 'Day'], value='Month', type='value', elem_id='centerText')
                         sort_type = gr.Dropdown(label='Sort by:', choices=['Newest','Oldest','Most Downloaded','Highest Rated','Most Liked','Most Buzz','Most Discussed','Most Collected','Most Images'], value='Highest Rated', type='value', elem_id='centerText')
                     with gr.Row(elem_id=component_id):
-                        create_json = gr.Checkbox(label=f"Save info after download", value=True, elem_id=toggle1, min_width=171)
-                        show_nsfw = gr.Checkbox(label='NSFW content', value=False, elem_id=toggle2, min_width=107)
-                        toggle_date = gr.Checkbox(label='Divide cards by date', value=False, elem_id=toggle3, min_width=142)
-                        only_liked = gr.Checkbox(label='Liked models only', value=False, interactive=show_only_liked, elem_id=toggle4, min_width=163)
-                        hide_installed = gr.Checkbox(label='Hide installed models', value=False, elem_id=toggle5, min_width=170)
+                        create_json = gr.Checkbox(label=f"Save info after download", value=True, elem_id=toggle1)
+                        show_nsfw = gr.Checkbox(label='NSFW content', value=False, elem_id=toggle2)
+                        toggle_date = gr.Checkbox(label='Divide cards by date', value=False, elem_id=toggle3)
+                        exact_search = gr.Checkbox(label='Exact search', value=True, elem_id=toggle6)
+                        only_liked = gr.Checkbox(label='Liked models only', value=False, interactive=show_only_liked, elem_id=toggle4)
+                        hide_installed = gr.Checkbox(label='Hide installed models', value=False, elem_id=toggle5)
                     with gr.Row():
                         size_slider = gr.Slider(label='Tile size:', minimum=8, maximum=20, value=12, step=0.25)
                         tile_count_slider = gr.Slider(label='Tile count:', minimum=1, maximum=100, value=27, step=1)
@@ -461,6 +464,7 @@ def on_ui_tabs():
                 only_liked,
                 hide_installed,
                 show_nsfw,
+                exact_search,
                 size_slider,
                 tile_count_slider
             ]
@@ -832,6 +836,7 @@ def on_ui_tabs():
             base_filter,
             only_liked,
             show_nsfw,
+            exact_search,
             tile_count_slider
         ]
 
@@ -876,7 +881,8 @@ def on_ui_tabs():
             search_term,
             tile_count_slider,
             base_filter,
-            show_nsfw
+            show_nsfw,
+            exact_search
         ]
 
         cancel_btn_list = [cancel_all_tags, cancel_installed, cancel_update_preview]
