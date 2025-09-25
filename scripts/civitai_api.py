@@ -1434,6 +1434,13 @@ def request_civit_api(api_url=None, skip_error_check=False):
             data = json.loads(response.text)
             return data
         response.raise_for_status()
+    except requests.exceptions.HTTPError as e:
+        if e.response.status_code == 404:
+            print(f'Model version not found (404): {api_url}')
+            return 'not_found'
+        else:
+            print(f'HTTP Error {e.response.status_code}: {e}')
+            return 'error'
     except requests.exceptions.Timeout as e:
         print('The request timed out. Please try again later.')
         return 'timeout'
