@@ -835,7 +835,8 @@ def update_model_info(model_string=None, model_version=None, only_html=False, in
                         selected_version = item['modelVersions'][0]  # fallback to first version
 
                 model_availability = selected_version.get('availability', 'Unknown')
-                model_date_published = selected_version.get('publishedAt', '').split('T')[0]
+                published_at = selected_version.get('publishedAt')
+                model_date_published = published_at.split('T')[0] if published_at else 'Unknown'
                 version_name = selected_version['name']
                 version_id = selected_version['id']
                 version_about = selected_version.get('description', '')
