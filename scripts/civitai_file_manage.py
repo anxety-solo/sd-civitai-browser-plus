@@ -155,7 +155,7 @@ def delete_model(delete_finish=None, model_filename=None, model_string=None, lis
 
 ## === ANXETY EDITs ===
 def delete_associated_files(directory, base_name):
-    """Deletes related model files in the save directory."""
+    """Deletes related model files in the save directory"""
     # Patterns for associated files
     associated_suffixes = ['', '.preview', '.api_info', '.html']
     image_exts = {'.png', '.jpg', '.jpeg'}
@@ -168,10 +168,10 @@ def delete_associated_files(directory, base_name):
         if name in [f'{base_name}{sfx}' for sfx in associated_suffixes]:
             try:
                 send2trash(file_path)
-                print(f'Associated file moved to trash: {file_path}')
+                print(f"Associated file moved to trash: {file_path}")
             except Exception:
                 os.remove(file_path)
-                print(f'Associated file deleted: {file_path}')
+                print(f"Associated file deleted: {file_path}")
             continue
 
         # Delete images matching pattern: <base_name>_<number>.<ext>
@@ -180,14 +180,14 @@ def delete_associated_files(directory, base_name):
             if suffix.isdigit():
                 try:
                     send2trash(file_path)
-                    print(f'Image moved to trash: {file_path}')
+                    print(f"Image moved to trash: {file_path}")
                 except Exception:
                     os.remove(file_path)
-                    print(f'Image deleted: {file_path}')
+                    print(f"Image deleted: {file_path}")
 
 
 def _resize_image_bytes(image_bytes, target_size=512):
-    """Resize image bytes to target_size on the longer side, keeping aspect ratio."""
+    """Resize image bytes to target_size on the longer side, keeping aspect ratio"""
     image = Image.open(io.BytesIO(image_bytes))
     width, height = image.size
 
@@ -283,7 +283,7 @@ def save_images(preview_html, model_filename, install_path, sub_folder, api_resp
     img_urls = re.findall(r'data-sampleimg="true" src=[\'"]?([^\'" >]+)', preview_html)
 
     if not img_urls:
-        print("No images found to download.")
+        print('No images found to download.')
         return
 
     # Limit number of images to download
@@ -333,7 +333,7 @@ def save_images(preview_html, model_filename, install_path, sub_folder, api_resp
     if downloaded_count > 0:
         print(f"Successfully downloaded {downloaded_count} images to: {image_path}")
     else:
-        print("No images were downloaded.")
+        print('No images were downloaded.')
 
 def card_update(gr_components, model_name, list_versions, is_install):
     if gr_components:
@@ -819,7 +819,7 @@ def save_model_info(install_path, file_name, sub_folder, sha256=None, preview_ht
                 json.dump(gl.json_info, f, indent=4, ensure_ascii=False)
 
 def find_model_version_by_sha256(api_response, sha256):
-    """Find the specific model version that matches the given SHA256 hash."""
+    """Find the specific model version that matches the given SHA256 hash"""
     for item in api_response.get('items', []):
         for model_version in item.get('modelVersions', []):
             for file in model_version.get('files', []):
@@ -829,7 +829,7 @@ def find_model_version_by_sha256(api_response, sha256):
     return None, None
 
 def find_model_version_by_filename(api_response, file_name):
-    """Find the specific model version that matches the given filename."""
+    """Find the specific model version that matches the given filename"""
     for item in api_response.get('items', []):
         for model_version in item.get('modelVersions', []):
             for file in model_version.get('files', []):
@@ -1259,7 +1259,7 @@ def file_scan(folders, tag_finish, installed_finish, preview_finish, overwrite_t
                     print(f"Request timed out for {url}. Skipping...")
                     url = None
                 except requests.exceptions.ConnectionError:
-                    print("Failed to connect to the API. The servers might be offline.")
+                    print('Failed to connect to the API. The servers might be offline.')
                     url = None
                 except Exception as e:
                     print(f"An unexpected error occurred: {e}")

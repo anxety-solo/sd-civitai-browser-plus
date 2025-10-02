@@ -1,4 +1,3 @@
-## === ANXETY EDITs ===
 import warnings, os, json
 from urllib3.exceptions import InsecureRequestWarning
 from datetime import datetime
@@ -16,14 +15,7 @@ class Colors:
     BLUE    = '\033[34m'
     MAGENTA = '\033[35m'
     CYAN    = '\033[36m'
-    BRIGHT_BLACK   = '\033[90m'
-    BRIGHT_RED     = '\033[91m'
-    BRIGHT_GREEN   = '\033[92m'
-    BRIGHT_YELLOW  = '\033[93m'
-    BRIGHT_BLUE    = '\033[94m'
-    BRIGHT_MAGENTA = '\033[95m'
-    BRIGHT_CYAN    = '\033[96m'
-    RESET = '\033[0m'
+    RESET   = '\033[0m'
 
 
 do_debug_print = getattr(opts, 'civitai_debug_prints', False)

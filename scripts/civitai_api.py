@@ -39,17 +39,17 @@ MODEL_TYPE_DISPLAY_NAMES = {
 }
 
 def get_display_type(type_name):
-    """Return short/clear display name for model type."""
+    """Return short/clear display name for model type"""
     return MODEL_TYPE_DISPLAY_NAMES.get(type_name, type_name)
 
 def is_early_access(version_data):
-    """Check if the model is an early access."""
+    """Check if the model is an early access"""
     avail = version_data.get('availability')
     return isinstance(avail, str) and avail == 'EarlyAccess'
 
 # This nsfwlevel system is not accurate...
 def is_model_nsfw(model_data, nsfw_level=8):
-    """Determine if a model is NSFW based on its metadata and first image."""
+    """Determine if a model is NSFW based on its metadata and first image"""
     if model_data.get('nsfw'):
         return True
     model_versions = model_data.get('modelVersions')
@@ -60,7 +60,7 @@ def is_model_nsfw(model_data, nsfw_level=8):
     return False
 
 def normalize_sha256(sha256_hash):
-    """Normalize SHA256 hash to uppercase and validate format."""
+    """Normalize SHA256 hash to uppercase and validate format"""
     if not sha256_hash:
         return None
     return sha256_hash.strip().upper()
@@ -129,7 +129,7 @@ def contenttype_folder(content_type, desc=None, fromCheck=False, custom_folder=N
 
 def model_list_html(json_data):
     def filter_versions(item, hide_early_access, current_time):
-        """Filter model versions based on file presence and early access status."""
+        """Filter model versions based on file presence and early access status"""
         versions = []
         for version in item.get('modelVersions', []):
             if not version.get('files'):
@@ -140,7 +140,7 @@ def model_list_html(json_data):
         return versions
 
     def collect_existing_files(model_folders):
-        """Collect existing file names and SHA256 hashes from model folders."""
+        """Collect existing file names and SHA256 hashes from model folders"""
         files_set = set()
         sha256_set = set()
         for folder in model_folders:
@@ -157,9 +157,9 @@ def model_list_html(json_data):
                                     if sha256:
                                         sha256_set.add(sha256)
                                 else:
-                                    print(f'Invalid JSON data in {json_path}. Expected a dictionary.')
+                                    print(f"Invalid JSON data in {json_path}. Expected a dictionary.")
                         except Exception as e:
-                            print(f'Error decoding JSON in {json_path}: {e}')
+                            print(f"Error decoding JSON in {json_path}: {e}")
         return files_set, sha256_set
 
     ## === ANXETY EDITs ===
@@ -174,10 +174,9 @@ def model_list_html(json_data):
         display_version = None
         for version in item.get('modelVersions', []):
             for file in version.get('files', []):
-                file_name, file_extension = os.path.splitext(file['name'])
-                file_name_full = f'{file_name}_{file["id"]}{file_extension}'
+                file_name = file['name']
                 file_sha256 = normalize_sha256(file.get('hashes', {}).get('SHA256', ''))
-                name_match = file_name_full.lower() in existing_files
+                name_match = file_name.lower() in existing_files
                 sha256_match = file_sha256 and file_sha256 in existing_files_sha256
                 if name_match or sha256_match:
                     display_version = version
@@ -207,15 +206,15 @@ def model_list_html(json_data):
 
             if resize_preview and media_type == 'image':
                 # For images, modify the URL to request specific size
-                image_url = re.sub(r'/width=\d+', f'/width={resize_size}', image_url)
+                image_url = re.sub(r'/width=\d+', f"/width={resize_size}", image_url)
 
             if media_type == 'video':
                 if resize_preview:
                     # For videos, replace or add width parameter
                     if '/width=' in image_url:
-                        image_url = re.sub(r'/width=\d+', f'/width={resize_size}', image_url)
+                        image_url = re.sub(r'/width=\d+', f"/width={resize_size}", image_url)
                     else:
-                        image_url = image_url.replace('transcode=true,', f'transcode=true,width={resize_size},')
+                        image_url = image_url.replace('transcode=true,', f"transcode=true,width={resize_size},")
                 else:
                     image_url = image_url.replace('width=', 'transcode=true,width=')
                 imgtag = f'<video class="video-bg" {playback} muted playsinline><source src="{image_url}" type="video/mp4"></video>'
@@ -229,10 +228,9 @@ def model_list_html(json_data):
         installstatus = ''
         for version in reversed(item.get('modelVersions', [])):
             for file in version.get('files', []):
-                file_name, file_extension = os.path.splitext(file['name'])
-                file_name_full = f'{file_name}_{file["id"]}{file_extension}'
+                file_name = file['name']
                 file_sha256 = normalize_sha256(file.get('hashes', {}).get('SHA256', ''))
-                name_match = file_name_full.lower() in existing_files
+                name_match = file_name.lower() in existing_files
                 sha256_match = file_sha256 and file_sha256 in existing_files_sha256
                 if name_match or sha256_match:
                     if version == item['modelVersions'][0]:
@@ -370,7 +368,7 @@ def model_list_html(json_data):
     return HTML
 
 def _search_by_sha256(sha256_hash):
-    """Search for a model by SHA256 hash."""
+    """Search for a model by SHA256 hash"""
     # Normalize and validate hash format
     normalized_hash = normalize_sha256(sha256_hash)
     if not normalized_hash or not re.match(r'^[A-F0-9]{64}$', normalized_hash):
@@ -453,7 +451,7 @@ def create_api_url(content_type=None, sort_type=None, period_type=None, use_sear
                 if version_match:
                     version_id = version_match.group(1)
                     # Make API request to get model version information
-                    version_api_url = f'https://civitai.com/api/v1/model-versions/{version_id}'
+                    version_api_url = f"https://civitai.com/api/v1/model-versions/{version_id}"
                     version_data = request_civit_api(version_api_url, skip_error_check=True)
 
                     if isinstance(version_data, dict) and 'modelId' in version_data:
@@ -858,9 +856,7 @@ def update_model_info(model_string=None, model_version=None, only_html=False, in
                     dl_dict[file['name']] = file['downloadUrl']
 
                     if not model_filename:
-                        model_filename = os.path.splitext(file['name'])[0]
-                        model_extension = os.path.splitext(file['name'])[1]
-                        model_filename = f"{model_filename}_{file['id']}{model_extension}"
+                        model_filename = file['name']
                         dl_url = file['downloadUrl']
                         gl.json_info = item
                         sha256_value = normalize_sha256(file['hashes'].get('SHA256')) or 'Unknown'
@@ -923,14 +919,14 @@ def update_model_info(model_string=None, model_version=None, only_html=False, in
                     'seed': 'Seed',
                     'Size': 'Size',
                 }
-                preferred_order = ["prompt", "negativePrompt", "Model", "sampler", "steps", "cfgScale", "Clip skip", "seed", "Size"]
+                preferred_order = ['prompt', 'negativePrompt', 'Model', 'sampler', 'steps', 'cfgScale', 'Clip skip', 'seed', 'Size']
 
                 # Check if api_version is a valid dictionary (not an error string)
                 if isinstance(api_version, dict) and 'images' in api_version:
                     for idx, pic in enumerate(api_version['images']):
                         index = f"preview_{idx}" if from_preview else idx
                         prompt_dict = pic.get('meta', {}) or {}
-                        image_url = re.sub(r'/width=\d+', f'/width={pic.get("width", "")}', pic['url'])
+                        image_url = re.sub(r'/width=\d+', f"/width={pic.get('width', '')}", pic['url'])
                         is_video = pic.get('type') == 'video'
 
                         img_html += (
@@ -1444,10 +1440,10 @@ def request_civit_api(api_url=None, skip_error_check=False):
         response.raise_for_status()
     except requests.exceptions.HTTPError as e:
         if e.response.status_code == 404:
-            print(f'Model version not found (404): {api_url}')
+            print(f"Model version not found (404): {api_url}")
             return 'not_found'
         else:
-            print(f'HTTP Error {e.response.status_code}: {e}')
+            print(f"HTTP Error {e.response.status_code}: {e}")
             return 'error'
     except requests.exceptions.Timeout as e:
         print('The request timed out. Please try again later.')

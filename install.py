@@ -1,7 +1,6 @@
 from pathlib import Path
-
-# ===  WebUI imports ===
 import launch
+import os
 
 aria2path = Path(__file__).resolve().parents[0] / 'aria2'
 
@@ -9,14 +8,26 @@ for item in aria2path.iterdir():
     if item.is_file():
         item.unlink()
 
-def install_req(check_name, install_name=None):
-    if not install_name:
-        install_name = check_name
-    if not launch.is_installed(f"{check_name}"):
-        launch.run_pip(f"install {install_name}", f"Installing missing requirement '{check_name}' for CivitAI-Browser+")
+req_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'requirements.txt')
 
-install_req('send2trash', 'send2trash==1.8.3')
-install_req('zip_unicode', 'ZipUnicode==1.1.1')
-install_req('bs4', 'beautifulsoup4==4.12.3')
-install_req('packaging', 'packaging==24.0')
-install_req('pysocks', 'pysocks==1.7.1')
+def dist2package(dist: str):
+    return ({
+        # 'send2trash': 'send2trash',
+        'ZipUnicod': 'zip_unicode',
+        'beautifulsoup4': 'bs4',
+    }).get(dist, dist)
+
+with open(req_file) as file:
+    for package in file:
+        try:
+            package = package.strip()
+            if '==' in package:
+                package_name = package.split('==')[0]
+            else:
+                package_name = package
+
+            if not launch.is_installed(dist2package(package_name)):
+                launch.run_pip(f"install {package}", f"CivitAI-Browser+ requirement: {package}")
+        except Exception as e:
+            print(e)
+            print(f'Warning: Failed to install {package}, something may not work.')

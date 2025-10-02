@@ -52,13 +52,13 @@ except:
 
 ## === ANXETY EDITs ===
 def is_early_access(version_data):
-    """Check if the model is an early access."""
+    """Check if the model is an early access"""
     avail = version_data.get('availability')
     return isinstance(avail, str) and avail == 'EarlyAccess'
 
 # This nsfwlevel system is not accurate...
 def is_model_nsfw(model_data, nsfw_level=8):
-    """Determine if a model is NSFW based on its metadata and first image."""
+    """Determine if a model is NSFW based on its metadata and first image"""
     if model_data.get('nsfw'):
         return True
     model_versions = model_data.get('modelVersions')
