@@ -1,5 +1,5 @@
-send2trash==1.8.3
-ZipUnicode==1.1.1
-beautifulsoup4==4.12.3
-packaging==24.0
-pysocks==1.7.1
+send2trash
+ZipUnicode
+beautifulsoup4
+packaging
+pysocks

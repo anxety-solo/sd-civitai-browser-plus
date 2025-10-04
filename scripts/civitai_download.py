@@ -11,7 +11,7 @@ import os
 import gradio as gr
 from pathlib import Path
 
-# ===  WebUI imports ===
+# === WebUI imports ===
 from modules.shared import opts, cmd_opts
 
 # === Extension imports ===

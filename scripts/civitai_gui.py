@@ -4,7 +4,7 @@ import os
 import re
 import gradio as gr
 
-# ===  WebUI imports ===
+# === WebUI imports ===
 from modules import script_callbacks, shared
 from modules.shared import opts, cmd_opts
 from modules.paths import extensions_dir

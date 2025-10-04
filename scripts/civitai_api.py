@@ -13,7 +13,7 @@ from html import escape
 from io import BytesIO
 from PIL import Image
 
-# ===  WebUI imports ===
+# === WebUI imports ===
 from modules.paths import models_path, extensions_dir, data_path
 from modules.images import read_info_from_image
 from modules.shared import cmd_opts, opts

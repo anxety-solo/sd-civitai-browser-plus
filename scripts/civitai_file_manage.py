@@ -14,7 +14,7 @@ from urllib.parse import urlparse
 from pathlib import Path
 from PIL import Image
 
-# ===  WebUI imports ===
+# === WebUI imports ===
 from modules.shared import cmd_opts, opts
 
 # === Extension imports ===
@@ -1436,10 +1436,10 @@ def scan_finish():
     )
 
 ## === ANXETY EDITs ===
-def load_to_browser(content_type, sort_type, period_type, use_search_term, search_term, tile_count, base_filter, nsfw):
+def load_to_browser(content_type, sort_type, period_type, use_search_term, search_term, tile_count, base_filter, nsfw, exact_search):
     global from_installed
 
-    model_list_return = _api.initial_model_page(content_type, sort_type, period_type, use_search_term, search_term, 1, base_filter, False, nsfw, tile_count, True)
+    model_list_return = _api.initial_model_page(content_type, sort_type, period_type, use_search_term, search_term, 1, base_filter, False, nsfw, exact_search, tile_count, True)
     from_installed = False
     return (
         *model_list_return,
