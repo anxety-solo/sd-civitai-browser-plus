@@ -21,7 +21,8 @@
   _Note: This toggle simply adds double quotes `" "` to your search query~_
 - Fixed the display logic for the "Select All" button – now it only appears when there are models to select.
 - Implemented optional setting to change the resolution of model previews (Customize to your liking in settings - `Browser`)
-- Removed "outdated models" logic and scanning for updates (It does not correspond to reality)
+- ~~Removed "outdated models" logic and scanning for updates (It does not correspond to reality)~~ _([Commit](https://github.com/anxety-solo/sd-civitai-browser-plus/commit/bd9b0bec465eb3803496ff002a330ae101fa2ae5))_</br>
+  _Note: The logic for detecting outdated models has been reintroduced and rewritten using pattern matching for versions such as `vX` or `vX.X`_
 - All CSS and JS files have been formatted using Prettier for consistent code style.
 - Implemented encryption of image previews when images are saved (For Kaggle Only!)</br>
   _Note: The [Encrypt-Image](https://github.com/anxety-solo/sd-encrypt-image) extension must be installed to enable this feature._

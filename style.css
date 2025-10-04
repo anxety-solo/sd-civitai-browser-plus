@@ -29,6 +29,9 @@
     box-shadow: 0 0 2px 2px rgba(255, 255, 255, 0.45);
 }
 
+.civmodelcardoutdated {
+    box-shadow: 0 0 2px 2px orange;
+}
 .civmodelcardinstalled {
     box-shadow: 0 0 2px 2px aquamarine;
 }

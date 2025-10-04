@@ -224,19 +224,38 @@ def model_list_html(json_data):
             # Try PNG first, then fallback to JPEG if PNG does not exist
             imgtag = '<img src="./file=html/card-no-preview.png" onerror="this.onerror=null;this.src=\'./file=html/card-no-preview.jpg\';"></img>'
 
-        # Install status
+        # Install status - check if model is installed and determine if it's outdated
         installstatus = ''
-        for version in reversed(item.get('modelVersions', [])):
-            for file in version.get('files', []):
-                file_name = file['name']
-                file_sha256 = normalize_sha256(file.get('hashes', {}).get('SHA256', ''))
-                name_match = file_name.lower() in existing_files
-                sha256_match = file_sha256 and file_sha256 in existing_files_sha256
-                if name_match or sha256_match:
-                    if version == item['modelVersions'][0]:
-                        installstatus = 'civmodelcardinstalled'
-                    else:
-                        installstatus = 'civmodelcardoutdated'
+        model_versions = item.get('modelVersions', [])
+        if model_versions:
+            available_versions = []
+            installed_versions = []
+
+            for version in model_versions:
+                version_name = version.get('name', '')
+                _, version_num = _file.extract_version_from_filename(version_name)
+                available_versions.append(version_num)
+
+                # Check if this version is installed
+                for file in version.get('files', []):
+                    file_name = file['name']
+                    file_sha256 = normalize_sha256(file.get('hashes', {}).get('SHA256', ''))
+                    name_match = file_name.lower() in existing_files
+                    sha256_match = file_sha256 and file_sha256 in existing_files_sha256
+
+                    if name_match or sha256_match:
+                        installed_versions.append(version_num)
+                        break
+
+            # Determine status based on version comparison
+            if installed_versions:
+                max_installed_version = max(installed_versions)
+                max_available_version = max(available_versions) if available_versions else 0
+
+                if max_installed_version >= max_available_version:
+                    installstatus = 'civmodelcardinstalled'
+                else:
+                    installstatus = 'civmodelcardoutdated'
 
         # Model name for JS and HTML
         model_name_js = model_name.replace("'", "\\'")

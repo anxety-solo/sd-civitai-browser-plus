@@ -42,6 +42,7 @@ gl.init()
 css_path = Path(__file__).resolve().parents[1] / 'style_html.css'
 no_update = False
 from_tag = False
+from_ver = False
 from_installed = False
 try:
     queue = not cmd_opts.no_gradio_queue
@@ -1011,55 +1012,106 @@ def get_models(file_path, gen_hash=None):
         return None
 
 ## === ANXETY EDITs ===
+def extract_version_from_filename(filename):
+    """
+    Extract version from filename using various patterns.
+    Returns tuple (version_string, version_number) or (None, 0) if version not found.
+    """
+    version_patterns = [
+        r'v(\d+\.\d+)',  # v1.0, v2.1, etc.
+        r'v(\d+\.\d\d)', # v1.00, v2.10, etc.
+        r'v(\d+)',       # v1, v2, etc.
+        r'(\d+\.\d+)',   # 1.0, 2.1, etc. (without v)
+        r'(\d+\.\d\d)',  # 1.00, 2.10, etc. (without v)
+        r'(\d+)$'        # 1, 2, etc. at the end (without v)
+    ]
+
+    for pattern in version_patterns:
+        match = re.search(pattern, filename, re.IGNORECASE)
+        if match:
+            version_str = match.group(1)
+            try:
+                # Convert to number for comparison
+                if '.' in version_str:
+                    version_num = float(version_str)
+                else:
+                    version_num = int(version_str)
+                return version_str, version_num
+            except ValueError:
+                continue
+
+    return None, 0
+
 def version_match(file_paths, api_response):
+    """Check model updates by comparing version names"""
     updated_models = []
+    outdated_models = []
     sha256_hashes = {}
 
+    # === 1. Collect SHA256 hashes from local JSON files ===
     for file_path in file_paths:
         json_path = f"{os.path.splitext(file_path)[0]}.json"
         if os.path.exists(json_path):
-            with open(json_path, 'r', encoding='utf-8') as f:
-                try:
+            try:
+                with open(json_path, 'r', encoding='utf-8') as f:
                     json_data = json.load(f)
                     sha256 = json_data.get('sha256')
                     if sha256:
                         sha256_hashes[os.path.basename(file_path)] = sha256.upper()
-                except Exception as e:
-                    print(f"Failed to open {json_path}: {e}")
+            except Exception as e:
+                print(f"Failed to read {json_path}: {e}")
 
+    # === 2. Prepare set of (filename_without_ext, sha256) ===
     file_names_and_hashes = set()
     for file_path in file_paths:
         file_name = os.path.basename(file_path)
-        file_name_without_ext = os.path.splitext(file_name)[0]
-        file_sha256 = sha256_hashes.get(file_name, '')
-        if file_sha256:
-            file_sha256 = file_sha256.upper()
-        file_names_and_hashes.add((file_name_without_ext, file_sha256))
+        file_name_no_ext = os.path.splitext(file_name)[0]
+        file_sha256 = sha256_hashes.get(file_name, '').upper()
+        file_names_and_hashes.add((file_name_no_ext, file_sha256))
 
+    # === 3. Compare with API response ===
     for item in api_response.get('items', []):
         model_versions = item.get('modelVersions', [])
-
         if not model_versions:
             continue
 
-        for model_version in model_versions:
-            files = model_version.get('files', [])
-            match_found = False
-            for file_entry in files:
-                entry_name = os.path.splitext(file_entry.get('name', ''))[0]
-                entry_sha256 = file_entry.get('hashes', {}).get('SHA256', '')
-                if entry_sha256:
-                    entry_sha256 = entry_sha256.upper()
+        available_versions = []
+        installed_versions = []
+        match_found = False
 
-                if (entry_name, entry_sha256) in file_names_and_hashes:
-                    match_found = True
+        # Collect all available versions
+        for model_version in model_versions:
+            version_name = model_version.get('name', '')
+            _, version_num = extract_version_from_filename(version_name)
+            available_versions.append(version_num)
+
+            # Check each file inside the version
+            for file_entry in model_version.get('files', []):
+                entry_name = os.path.splitext(file_entry.get('name', ''))[0]
+                entry_sha = file_entry.get('hashes', {}).get('SHA256', '').upper()
+
+                # Check for local match by name or hash
+                for local_name, local_sha in file_names_and_hashes:
+                    if local_name == entry_name or (local_sha and local_sha == entry_sha):
+                        installed_versions.append(version_num)
+                        match_found = True
+                        break
+                if match_found:
                     break
 
-            if match_found:
-                updated_models.append((f"&ids={item['id']}", item['name']))
-                break
+        if not match_found:
+            continue
 
-    return updated_models
+        max_installed_version = max(installed_versions) if installed_versions else 0
+        max_available_version = max(available_versions) if available_versions else 0
+
+        # Model is up to date if installed version >= latest version
+        if max_installed_version >= max_available_version:
+            updated_models.append((f"&ids={item['id']}", item['name']))
+        else:
+            outdated_models.append((f"&ids={item['id']}", item['name']))
+
+    return updated_models, outdated_models
 
 def get_content_choices(scan_choices=False):
     use_LORA = getattr(opts, 'use_LORA', False)
@@ -1094,7 +1146,7 @@ def get_save_path_and_name(install_path, file_name, api_response, sub_folder=Non
     return save_path, name
 
 ## === ANXETY EDITs ===
-def file_scan(folders, tag_finish, installed_finish, preview_finish, overwrite_toggle, tile_count, gen_hash, create_html, progress=gr.Progress() if queue else None):
+def file_scan(folders, tag_finish, ver_finish, installed_finish, preview_finish, overwrite_toggle, tile_count, gen_hash, create_html, progress=gr.Progress() if queue else None):
     global no_update
     proxies, ssl = _api.get_proxies()
     gl.scan_files = True
@@ -1102,6 +1154,8 @@ def file_scan(folders, tag_finish, installed_finish, preview_finish, overwrite_t
 
     if from_tag:
         number = _download.random_number(tag_finish)
+    elif from_ver:
+        number = _download.random_number(ver_finish)
     elif from_installed:
         number = _download.random_number(installed_finish)
     elif from_preview:
@@ -1275,19 +1329,47 @@ def file_scan(folders, tag_finish, installed_finish, preview_finish, overwrite_t
     if progress != None:
         progress(1, desc='Processing final results...')
 
+    if from_ver:
+        updated_models, outdated_models = version_match(file_paths, api_response)
+
+        updated_set = set(updated_models)
+        outdated_set = set(outdated_models)
+        outdated_set = {model for model in outdated_set if model[0] not in {updated_model[0] for updated_model in updated_set}}
+
+        all_model_ids = [model[0] for model in outdated_set]
+        all_model_names = [model[1] for model in outdated_set]
+
+        for model_name in all_model_names:
+            print(f'"{model_name}" is currently outdated.')
+
+        if len(all_model_ids) == 0:
+            no_update = True
+            gl.scan_files = False
+            return (
+                gr.HTML.update(value='<div style="font-size: 24px; text-align: center; margin: 50px !important;">No updates found for selected models.</div>'),
+                gr.Textbox.update(value=number)
+            )
+
     model_chunks = list(chunks(all_model_ids, tile_count))
 
     base_url = "https://civitai.com/api/v1/models?limit=100&nsfw=true"
     gl.url_list = {i + 1: f"{base_url}{''.join(chunk)}" for i, chunk in enumerate(model_chunks)}
 
-    if from_installed:
+    ## === ANXETY EDITs ===
+    if from_ver:
+        gl.scan_files = False
+        return (
+            gr.HTML.update(value='<div style="font-size: 24px; text-align: center; margin: 50px !important;">Outdated models have been found.<br>Please press the button above to load the models into the browser tab</div>'),
+            gr.Textbox.update(value=number)
+        )
+
+    elif from_installed:
         gl.scan_files = False
         return (
             gr.HTML.update(value='<div style="font-size: 24px; text-align: center; margin: 50px !important;">Installed models have been loaded.<br>Please press the button above to load the models into the browser tab</div>'),
             gr.Textbox.update(value=number)
         )
 
-    ## === ANXETY EDITs ===
     elif from_tag:
         completed_tags = 0
         tag_count = len(file_paths)
@@ -1366,6 +1448,7 @@ def finish_returns():
         gr.Button.update(interactive=True, visible=True),
         gr.Button.update(interactive=True, visible=True),
         gr.Button.update(interactive=True, visible=True),
+        gr.Button.update(interactive=True, visible=True),
         gr.Button.update(interactive=True, visible=False),  # Organize models hidden until implemented
         gr.Button.update(interactive=False, visible=False)
     )
@@ -1377,18 +1460,21 @@ def start_returns(number):
         gr.Button.update(interactive=True, visible=True),
         gr.Button.update(interactive=False, visible=True),
         gr.Button.update(interactive=False, visible=True),
+        gr.Button.update(interactive=False, visible=True),
         gr.Button.update(interactive=False, visible=False),  # Organize models hidden until implemented
         gr.HTML.update(value='<div style="min-height: 100px;"></div>')
     )
 
 ## === ANXETY EDITs ===
 def set_globals(input_global=None):
-    global from_tag, from_installed, from_preview, from_organize
-    from_tag = from_installed = from_preview = from_organize = False
+    global from_tag, from_ver, from_installed, from_preview, from_organize
+    from_tag = from_ver = from_installed = from_preview = from_organize = False
     if input_global == 'reset':
         return
     elif input_global == 'from_tag':
         from_tag = True
+    elif input_global == 'from_ver':
+        from_ver = True
     elif input_global == 'from_installed':
         from_installed = True
     elif input_global == 'from_preview':
@@ -1404,6 +1490,11 @@ def save_tag_start(tag_start):
 def save_preview_start(preview_start):
     set_globals('from_preview')
     number = _download.random_number(preview_start)
+    return start_returns(number)
+
+def ver_search_start(ver_start):
+    set_globals('from_ver')
+    number = _download.random_number(ver_start)
     return start_returns(number)
 
 def installed_models_start(installed_start):
@@ -1426,7 +1517,9 @@ def save_preview_finish():
 
 def scan_finish():
     set_globals('reset')
+
     return (
+        gr.Button.update(interactive=no_update, visible=no_update),
         gr.Button.update(interactive=no_update, visible=no_update),
         gr.Button.update(interactive=no_update, visible=no_update),
         gr.Button.update(interactive=no_update, visible=no_update),
@@ -1437,12 +1530,13 @@ def scan_finish():
 
 ## === ANXETY EDITs ===
 def load_to_browser(content_type, sort_type, period_type, use_search_term, search_term, tile_count, base_filter, nsfw, exact_search):
-    global from_installed
+    global from_ver, from_installed
 
     model_list_return = _api.initial_model_page(content_type, sort_type, period_type, use_search_term, search_term, 1, base_filter, False, nsfw, exact_search, tile_count, True)
-    from_installed = False
+    from_ver, from_installed =  False, False
     return (
         *model_list_return,
+        gr.Button.update(interactive=True, visible=True),
         gr.Button.update(interactive=True, visible=True),
         gr.Button.update(interactive=True, visible=True),
         gr.Button.update(interactive=True, visible=True),

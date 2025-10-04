@@ -295,6 +295,12 @@ def on_ui_tabs():
             with gr.Row():
                 preview_progress = gr.HTML(value='<div style="min-height: 0px;"></div>')
             with gr.Row():
+                ver_search = gr.Button(value='Scan for available updates', interactive=True, visible=True)
+                cancel_ver_search = gr.Button(value='Cancel updates scan', interactive=False, visible=False)
+                load_to_browser_outdated = gr.Button(value='Load outdated models to browser', interactive=False, visible=False)
+            with gr.Row():
+                version_progress = gr.HTML(value='<div style="min-height: 0px;"></div>')
+            with gr.Row():
                 load_installed = gr.Button(value='Load all installed models', interactive=True, visible=True)
                 cancel_installed = gr.Button(value='Cancel loading models', interactive=False, visible=False)
                 load_to_browser_installed = gr.Button(value='Load installed models to browser', interactive=False, visible=False)
@@ -368,6 +374,8 @@ def on_ui_tabs():
         tag_finish = gr.Textbox(visible=False)
         preview_start = gr.Textbox(visible=False)
         preview_finish = gr.Textbox(visible=False)
+        ver_start = gr.Textbox(visible=False)
+        ver_finish = gr.Textbox(visible=False)
         installed_start = gr.Textbox(visible=None)
         installed_finish = gr.Textbox(visible=None)
         organize_start = gr.Textbox(visible=None)
@@ -853,6 +861,7 @@ def on_ui_tabs():
         file_scan_inputs = [
             selected_tags,
             tag_finish,
+            ver_finish,
             installed_finish,
             preview_finish,
             overwrite_toggle,
@@ -873,13 +882,15 @@ def on_ui_tabs():
             exact_search
         ]
 
-        cancel_btn_list = [cancel_all_tags, cancel_installed, cancel_update_preview]
+        cancel_btn_list = [cancel_all_tags, cancel_ver_search, cancel_installed, cancel_update_preview]
 
-        browser = [save_all_tags, load_installed, update_preview]
+        browser = [save_all_tags, ver_search, load_installed, update_preview]
 
         browser_installed_load = [cancel_installed, load_to_browser_installed, installed_progress]
+        browser_outdated_load = [cancel_ver_search, load_to_browser_outdated, version_progress]
 
         browser_installed_list = page_outputs + browser + browser_installed_load
+        browser_outdated_list = page_outputs + browser + browser_outdated_load
 
         # Page Button Functions #
 
@@ -901,6 +912,43 @@ def on_ui_tabs():
 
         # Update model Functions #
 
+        ver_search.click(
+            fn=_file.ver_search_start,
+            inputs=[ver_start],
+            outputs=[
+                ver_start,
+                ver_search,
+                cancel_ver_search,
+                load_installed,
+                save_all_tags,
+                update_preview,
+                organize_models,
+                version_progress
+            ]
+        )
+
+        ver_start.change(
+            fn=_file.file_scan,
+            inputs=file_scan_inputs,
+            outputs=[
+                version_progress,
+                ver_finish
+            ]
+        )
+
+        ver_finish.change(
+            fn=_file.scan_finish,
+            outputs=[
+                ver_search,
+                save_all_tags,
+                load_installed,
+                update_preview,
+                organize_models,
+                cancel_ver_search,
+                load_to_browser_outdated
+            ]
+        )
+
         load_installed.click(
             fn=_file.installed_models_start,
             inputs=[installed_start],
@@ -908,6 +956,7 @@ def on_ui_tabs():
                 installed_start,
                 load_installed,
                 cancel_installed,
+                ver_search,
                 save_all_tags,
                 update_preview,
                 organize_models,
@@ -927,6 +976,7 @@ def on_ui_tabs():
         installed_finish.change(
             fn=_file.scan_finish,
             outputs=[
+                ver_search,
                 save_all_tags,
                 load_installed,
                 update_preview,
@@ -944,6 +994,7 @@ def on_ui_tabs():
                 save_all_tags,
                 cancel_all_tags,
                 load_installed,
+                ver_search,
                 update_preview,
                 organize_models,
                 tag_progress
@@ -962,6 +1013,7 @@ def on_ui_tabs():
         tag_finish.change(
             fn=_file.save_tag_finish,
             outputs=[
+                ver_search,
                 save_all_tags,
                 load_installed,
                 update_preview,
@@ -978,6 +1030,7 @@ def on_ui_tabs():
                 update_preview,
                 cancel_update_preview,
                 load_installed,
+                ver_search,
                 save_all_tags,
                 organize_models,
                 preview_progress
@@ -996,6 +1049,7 @@ def on_ui_tabs():
         preview_finish.change(
             fn=_file.save_preview_finish,
             outputs=[
+                ver_search,
                 save_all_tags,
                 load_installed,
                 update_preview,
@@ -1012,6 +1066,7 @@ def on_ui_tabs():
                 organize_models,
                 cancel_organize,
                 load_installed,
+                ver_search,
                 save_all_tags,
                 update_preview,
                 organize_progress
@@ -1030,12 +1085,19 @@ def on_ui_tabs():
         organize_finish.change(
             fn=_file.save_preview_finish,
             outputs=[
+                ver_search,
                 save_all_tags,
                 load_installed,
                 update_preview,
                 organize_models,
                 cancel_update_preview
             ]
+        )
+
+        load_to_browser_outdated.click(
+            fn=_file.load_to_browser,
+            inputs=load_to_browser_inputs,
+            outputs=browser_outdated_list
         )
 
         load_to_browser_installed.click(
