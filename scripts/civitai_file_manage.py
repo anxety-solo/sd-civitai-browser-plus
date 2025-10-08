@@ -1517,7 +1517,6 @@ def save_preview_finish():
 
 def scan_finish():
     set_globals('reset')
-
     return (
         gr.Button.update(interactive=no_update, visible=no_update),
         gr.Button.update(interactive=no_update, visible=no_update),

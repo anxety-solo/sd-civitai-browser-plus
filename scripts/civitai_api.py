@@ -202,7 +202,7 @@ def model_list_html(json_data):
 
             # Apply resize if enabled
             resize_preview = getattr(opts, 'resize_preview_cards', True)
-            resize_size = getattr(opts, 'preview_resize_size', 512)
+            resize_size = getattr(opts, 'resize_preview_size', 512)
 
             if resize_preview and media_type == 'image':
                 # For images, modify the URL to request specific size
