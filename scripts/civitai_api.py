@@ -66,18 +66,16 @@ def normalize_sha256(sha256_hash):
     return sha256_hash.strip().upper()
 
 
-def contenttype_folder(content_type, desc=None, fromCheck=False, custom_folder=None):
+def contenttype_folder(content_type, desc=None, custom_folder=None):
     """
     Returns the appropriate folder path for a given content type.
     Args:
         content_type (str): The type of content/model.
         desc (str, optional): Description or additional info for type-specific logic.
-        fromCheck (bool, optional): Used for LoCon/LORA logic.
         custom_folder (str or Path, optional): Custom base folder to use instead of defaults.
     Returns:
         Path: The resolved folder path for the content type, or None if not found.
     """
-    use_LORA    = getattr(opts, 'use_LORA', False)                              # Whether to use LORA folder logic
     desc_upper  = (desc or 'PLACEHOLDER').upper()                               # Uppercase description for type checks
     main_models = Path(custom_folder) if custom_folder else Path(models_path)   # Main models folder path
     main_data   = Path(custom_folder) if custom_folder else Path(data_path)     # Main data folder path (WebUI root)
@@ -96,8 +94,6 @@ def contenttype_folder(content_type, desc=None, fromCheck=False, custom_folder=N
         'TextualInversion': lambda: resolve_path('embeddings_dir', main_data / 'embeddings'),
         'AestheticGradient': lambda: (Path(custom_folder) if custom_folder else ext_dir / 'stable-diffusion-webui-aesthetic-gradients') / 'aesthetic_embeddings',
         'LORA': lambda: resolve_path('lora_dir', main_models / 'Lora'),
-        'LoCon': lambda: resolve_path('lora_dir', main_models / 'Lora') if use_LORA and not fromCheck else main_models / 'LyCORIS',
-        'DoRA': lambda: resolve_path('lora_dir', main_models / 'Lora'),
         'VAE': lambda: resolve_path('vae_dir', main_models / 'VAE'),
         'Controlnet': lambda: resolve_path('controlnet_dir', main_models / 'ControlNet'),
         'Poses': lambda: main_models / 'Poses',
@@ -511,22 +507,9 @@ def create_api_url(content_type=None, sort_type=None, period_type=None, use_sear
     debug_print(api_url)
     return api_url
 
-def convert_LORA_LoCon(content_type):
-    use_LORA = getattr(opts, 'use_LORA', False)
-    if content_type:
-        if use_LORA and 'LORA, LoCon, DoRA' in content_type:
-            content_type.remove('LORA, LoCon, DoRA')
-            if 'LORA' not in content_type:
-                content_type.append('LORA')
-            if 'LoCon' not in content_type:
-                content_type.append('LoCon')
-            if 'DoRA' not in content_type:
-                content_type.append('DoRA')
-    return content_type
 
 ## === ANXETY EDITs ===
 def initial_model_page(content_type=None, sort_type=None, period_type=None, use_search_term=None, search_term=None, current_page=None, base_filter=None, only_liked=None, nsfw=None, exact_search=None, tile_count=None, from_update_tab=False):
-    content_type = convert_LORA_LoCon(content_type)
     current_inputs = (content_type, sort_type, period_type, use_search_term, search_term, tile_count, base_filter, nsfw, exact_search)
     if current_inputs != gl.previous_inputs and gl.previous_inputs != None or not current_page:
         current_page = 1
@@ -601,7 +584,6 @@ def prev_model_page(content_type, sort_type, period_type, use_search_term, searc
     return next_model_page(content_type, sort_type, period_type, use_search_term, search_term, current_page, base_filter, only_liked, nsfw, exact_search, tile_count, isNext=False)
 
 def next_model_page(content_type, sort_type, period_type, use_search_term, search_term, current_page, base_filter, only_liked, nsfw, exact_search, tile_count, isNext=True):
-    content_type = convert_LORA_LoCon(content_type)
 
     current_inputs = (content_type, sort_type, period_type, use_search_term, search_term, tile_count, base_filter, nsfw, exact_search)
     if current_inputs != gl.previous_inputs and gl.previous_inputs != None:
@@ -1285,9 +1267,8 @@ def update_model_info(model_string=None, model_version=None, only_html=False, in
         )
 
 def sub_folder_value(content_type, desc=None):
-    use_LORA = getattr(opts, 'use_LORA', False)
-    if content_type in ['LORA', 'LoCon'] and use_LORA:
-        folder = getattr(opts, 'LORA_LoCon_default_subfolder', 'None')
+    if content_type == 'LORA':
+        folder = getattr(opts, 'LORA_default_subfolder', 'None')
     elif content_type == 'Upscaler':
         for upscale_type in ['SWINIR', 'REALESRGAN', 'GFPGAN', 'BSRGAN']:
             if upscale_type in desc:

@@ -471,7 +471,7 @@ def model_from_sent(model_name, content_type):
     elif 'checkpoint' in content_type:
         content_type = ['Checkpoint']
     elif 'lora' in content_type:
-        content_type = ['LORA', 'LoCon']
+        content_type = ['LORA']
 
     extensions = ['.pt', '.ckpt', '.pth', '.safetensors', '.th', '.zip', '.vae']
 
@@ -561,7 +561,7 @@ def send_to_browser(model_name, content_type, click_first_item):
     elif 'checkpoint' in content_type:
         content_type = ['Checkpoint']
     elif 'lora' in content_type:
-        content_type = ['LORA', 'LoCon']
+        content_type = ['LORA']
     extensions = ['.pt', '.ckpt', '.pth', '.safetensors', '.th', '.zip', '.vae']
 
     for content_type_item in content_type:
@@ -1114,17 +1114,10 @@ def version_match(file_paths, api_response):
     return updated_models, outdated_models
 
 def get_content_choices(scan_choices=False):
-    use_LORA = getattr(opts, 'use_LORA', False)
-    if use_LORA:
-        content_list = [
-            'Checkpoint', 'TextualInversion', 'LORA, LoCon, DoRA', 'Poses', 'Controlnet',
-            'AestheticGradient', 'VAE', 'Upscaler', 'MotionModule', 'Wildcards', 'Workflows', 'Other'
-        ]
-    else:
-        content_list = [
-            'Checkpoint', 'TextualInversion', 'LORA', 'LoCon', 'DoRA', 'Poses', 'Controlnet',
-            'AestheticGradient', 'VAE', 'Upscaler', 'MotionModule', 'Wildcards', 'Workflows', 'Other'
-        ]
+    content_list = [
+        'Checkpoint', 'TextualInversion', 'LORA', 'Poses', 'Controlnet',
+        'AestheticGradient', 'VAE', 'Upscaler', 'MotionModule', 'Wildcards', 'Workflows', 'Other'
+    ]
     if scan_choices:
         content_list.insert(0, 'All')
         return content_list
@@ -1177,14 +1170,8 @@ def file_scan(folders, tag_finish, ver_finish, installed_finish, preview_finish,
         folders = _file.get_content_choices()
 
     for item in folders:
-        if item == 'LORA, LoCon, DoRA':
+        if item == 'LORA':
             folder = _api.contenttype_folder('LORA')
-            if folder:
-                folders_to_check.append(folder)
-            folder = _api.contenttype_folder('LoCon', fromCheck=True)
-            if folder:
-                folders_to_check.append(folder)
-            folder = _api.contenttype_folder('DoRA')
             if folder:
                 folders_to_check.append(folder)
         elif item == 'Upscaler':

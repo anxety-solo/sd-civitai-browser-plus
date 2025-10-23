@@ -1162,16 +1162,6 @@ def on_ui_settings():
     )
 
     shared.opts.add_option(
-        'use_LORA',
-        shared.OptionInfo(
-            default=True,
-            label='Combine LoCon, LORA & DoRA as one option',
-            section=browser,
-            category_id=cat_id
-        )
-    )
-
-    shared.opts.add_option(
         'dot_subfolders',
         shared.OptionInfo(
             default=True,
@@ -1473,12 +1463,9 @@ def on_ui_settings():
     )
 
     # Default sub folders
-    use_LORA = getattr(opts, 'use_LORA', False)
     folders = [
         'Checkpoint',
-        'LORA, LoCon, DoRA' if use_LORA else 'LORA',
-        'LoCon' if not use_LORA else None,
-        'DoRA' if not use_LORA else None,
+        'LORA',
         'TextualInversion',
         'Poses',
         'Controlnet',
@@ -1511,10 +1498,6 @@ def on_ui_settings():
             folder_key = folder
             desc = None
 
-        # Special case for LORA, LoCon, DoRA
-        if folder == 'LORA, LoCon, DoRA':
-            folder_key = 'LORA'
-            setting_name = 'LORA_LoCon'
 
         shared.opts.add_option(
             f"{setting_name}_default_subfolder",

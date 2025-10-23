@@ -17,6 +17,7 @@
   _Note: Badges are only visible when `Tile Size` is set to 11 or higher._
 - Model cards that require purchase are marked in gold.</br>
   _Note: The model type badge turns gold and displays a lightning icon :3_
+- Removed `LoCon` and `DoRA` model types – now only `LORA` is supported~
 - Added an `Exact search` toggle in the search filter for precise results.</br>
   _Note: This toggle simply adds double quotes `" "` to your search query~_
 - Fixed the display logic for the "Select All" button – now it only appears when there are models to select.
