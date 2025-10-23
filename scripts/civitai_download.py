@@ -18,6 +18,7 @@ from modules.shared import opts, cmd_opts
 import scripts.civitai_file_manage as _file
 import scripts.civitai_global as gl
 import scripts.civitai_api as _api
+from scripts.civitai_api import is_early_access, is_model_nsfw
 from scripts.civitai_global import print, debug_print
 
 try:
@@ -51,22 +52,6 @@ except:
 
 
 ## === ANXETY EDITs ===
-def is_early_access(version_data):
-    """Check if the model is an early access"""
-    avail = version_data.get('availability')
-    return isinstance(avail, str) and avail == 'EarlyAccess'
-
-# This nsfwlevel system is not accurate...
-def is_model_nsfw(model_data, nsfw_level=8):
-    """Determine if a model is NSFW based on its metadata and first image"""
-    if model_data.get('nsfw'):
-        return True
-    model_versions = model_data.get('modelVersions')
-    if model_versions and model_versions[0].get('images'):
-        first_image = model_versions[0]['images'][0]
-        if first_image.get('nsfwLevel', 0) >= nsfw_level:
-            return True
-    return False
 
 def start_aria2_rpc():
     start_file = os.path.join(aria2path, '_')
@@ -580,22 +565,15 @@ def download_file(url, file_path, install_path, model_id, progress=gr.Progress()
 
 def info_to_json(install_path, model_id, model_sha256, unpackList=None):
     json_file = os.path.splitext(install_path)[0] + '.json'
-    if os.path.exists(json_file):
-        try:
-            with open(json_file, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-        except Exception as e:
-            print(f"Failed to open {json_file}: {e}")
-    else:
-        data = {}
-
-    data['modelId'] = model_id
-    data['sha256'] = model_sha256
+    data = _api.safe_json_load(json_file) or {}
+    data.update({
+        'modelId': model_id,
+        'sha256': model_sha256
+    })
     if unpackList:
         data['unpackList'] = unpackList
 
-    with open(json_file, 'w', encoding='utf-8') as f:
-        json.dump(data, f, indent=4)
+    _api.safe_json_save(json_file, data)
 
 def download_file_old(url, file_path, model_id, progress=gr.Progress() if queue else None):
     try:

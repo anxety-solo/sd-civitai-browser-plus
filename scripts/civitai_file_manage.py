@@ -90,14 +90,10 @@ def delete_model(delete_finish=None, model_filename=None, model_string=None, lis
             for file in files:
                 if file.endswith('.json'):
                     file_path = os.path.join(root, file)
-                    try:
-                        with open(file_path, 'r', encoding='utf-8') as json_file:
-                            data = json.load(json_file)
-                            file_sha256 = data.get('sha256', '')
-                            if file_sha256:
-                                file_sha256 = file_sha256.upper()
-                    except Exception as e:
-                        print(f"Failed to open: {file_path}: {e}")
+                    data = _api.safe_json_load(file_path)
+                    if data:
+                        file_sha256 = data.get('sha256', '').upper()
+                    else:
                         file_sha256 = '0'
 
                     if file_sha256 == sha256_upper:
@@ -389,15 +385,9 @@ def gen_sha256(file_path):
     json_file = os.path.splitext(file_path)[0] + '.json'
 
     if os.path.exists(json_file):
-        try:
-            with open(json_file, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-
-            if 'sha256' in data and data['sha256']:
-                hash_value = data['sha256']
-                return hash_value
-        except Exception as e:
-            print(f"Failed to open {json_file}: {e}")
+        data = _api.safe_json_load(json_file)
+        if data and 'sha256' in data and data['sha256']:
+            return data['sha256']
 
     def read_chunks(file, size=io.DEFAULT_BUFFER_SIZE):
         while True:
@@ -417,21 +407,15 @@ def gen_sha256(file_path):
     hash_value = h.hexdigest()
 
     if os.path.exists(json_file):
-        try:
-            with open(json_file, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-
-            if 'sha256' in data and data['sha256']:
-                data['sha256'] = hash_value
-
-            with open(json_file, 'w', encoding='utf-8') as f:
-                json.dump(data, f, indent=4)
-        except Exception as e:
-            print(f"Failed to open {json_file}: {e}")
+        data = _api.safe_json_load(json_file)
+        if data:
+            data['sha256'] = hash_value
+        else:
+            data = {'sha256': hash_value}
     else:
         data = {'sha256': hash_value}
-        with open(json_file, 'w', encoding='utf-8') as f:
-            json.dump(data, f, indent=4)
+
+    _api.safe_json_save(json_file, data)
 
     return hash_value
 
@@ -518,12 +502,8 @@ def model_from_sent(model_name, content_type):
         file_sha256 = None
         json_file = os.path.splitext(model_file)[0] + '.json'
         if os.path.exists(json_file):
-            try:
-                with open(json_file, 'r', encoding='utf-8') as f:
-                    data = json.load(f)
-                    file_sha256 = data.get('sha256')
-            except Exception as e:
-                print(f"Failed to read {json_file}: {e}")
+            data = _api.safe_json_load(json_file)
+            file_sha256 = data.get('sha256') if data else None
         # Find the specific model version based on SHA256 or filename
         if file_sha256:
             model_version, item = find_model_version_by_sha256(api_response, file_sha256)
@@ -640,8 +620,7 @@ def getSubfolders(model_folder, basemodel=None, nsfw=None, author=None, modelNam
                         sub_folder = os.sep + sub_folder
                     sub_folders.append(sub_folder)
 
-        with open(gl.subfolder_json, 'r') as json_file:
-            config_data = json.load(json_file)
+        config_data = _api.safe_json_load(gl.subfolder_json) or {}
 
         for key, value in config_data.items():
             # Skip timestamp field and non-string values
@@ -674,9 +653,7 @@ def getSubfolders(model_folder, basemodel=None, nsfw=None, author=None, modelNam
     return sub_folders
 
 def updateSubfolder(subfolderInput):
-    with open(gl.subfolder_json, 'r') as f:
-        data = json.load(f)
-
+    data = _api.safe_json_load(gl.subfolder_json) or {}
     index, action, value = subfolderInput.split('.', 2)
     index = str(index)
 
@@ -685,8 +662,7 @@ def updateSubfolder(subfolderInput):
     elif action == 'add':
         data[index] = value
 
-    with open(gl.subfolder_json, 'w') as f:
-        json.dump(data, f, indent=4)
+    _api.safe_json_save(gl.subfolder_json, data)
 
 def is_image_url(url):
     image_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp']
@@ -780,12 +756,8 @@ def save_model_info(install_path, file_name, sub_folder, sha256=None, preview_ht
     if not sha256:
         existing_json_file = os.path.splitext(os.path.join(install_path, file_name))[0] + '.json'
         if os.path.exists(existing_json_file):
-            try:
-                with open(existing_json_file, 'r', encoding='utf-8') as f:
-                    data = json.load(f)
-                    sha256 = data.get('sha256')
-            except Exception as e:
-                print(f"Failed to read {existing_json_file}: {e}")
+            data = _api.safe_json_load(existing_json_file)
+            sha256 = data.get('sha256') if data else None
 
     result = find_and_save(api_response, sha256, file_name, json_file, False, overwrite_toggle)
     if result != 'found':
@@ -816,8 +788,7 @@ def save_model_info(install_path, file_name, sub_folder, sha256=None, preview_ht
     if save_api_info:
         path_to_new_file = os.path.join(save_path, f'{filename}.api_info.json')
         if not os.path.exists(path_to_new_file) or overwrite_toggle:
-            with open(path_to_new_file, mode='w', encoding='utf-8') as f:
-                json.dump(gl.json_info, f, indent=4, ensure_ascii=False)
+            _api.safe_json_save(path_to_new_file, gl.json_info)
 
 def find_model_version_by_sha256(api_response, sha256):
     """Find the specific model version that matches the given SHA256 hash"""
@@ -881,14 +852,7 @@ def find_and_save(api_response, sha256=None, file_name=None, json_file=None, no_
         else:
             trained_tags = trained_words
 
-        if os.path.exists(json_file):
-            with open(json_file, 'r', encoding='utf-8') as f:
-                try:
-                    content = json.load(f)
-                except:
-                    content = {}
-        else:
-            content = {}
+        content = _api.safe_json_load(json_file) or {}
         changed = False
         if overwrite_toggle == False:
             if 'activation text' not in content:
@@ -921,8 +885,7 @@ def find_and_save(api_response, sha256=None, file_name=None, json_file=None, no_
             content['modelPageURL'] = f"https://civitai.com/models/{item.get('id')}?modelVersionId={model_version.get('id')}"
             changed = True
 
-        with open(json_file, 'w', encoding='utf-8') as f:
-            json.dump(content, f, indent=4)
+        _api.safe_json_save(json_file, content)
 
         if changed:
             print(f"Model info saved to: {json_file}")
@@ -936,18 +899,11 @@ def get_models(file_path, gen_hash=None):
     sha256 = None
     json_file = os.path.splitext(file_path)[0] + '.json'
     if os.path.exists(json_file):
-        try:
-            with open(json_file, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-
-                if 'modelId' in data:
-                    modelId = data['modelId']
-                if 'modelVersionId' in data:
-                    modelVersionId = data['modelVersionId']
-                if 'sha256' in data and data['sha256']:
-                    sha256 = data['sha256']
-        except Exception as e:
-            print(f"Failed to open {json_file}: {e}")
+        data = _api.safe_json_load(json_file)
+        if data:
+            modelId = data.get('modelId')
+            modelVersionId = data.get('modelVersionId')
+            sha256 = data.get('sha256')
 
     if not modelId or not modelVersionId or not sha256:
         if not sha256 and gen_hash:
@@ -977,28 +933,19 @@ def get_models(file_path, gen_hash=None):
                 modelVersionId = 'Model not found'
 
             if os.path.exists(json_file):
-                try:
-                    with open(json_file, 'r', encoding='utf-8') as f:
-                        data = json.load(f)
-
-                    data['modelId'] = modelId
-                    data['modelVersionId'] = modelVersionId
-                    data['modelPageURL'] = f"https://civitai.com/models/{modelId}?modelVersionId={modelVersionId}"
-                    data['sha256'] = sha256.upper()
-
-                    with open(json_file, 'w', encoding='utf-8') as f:
-                        json.dump(data, f, indent=4)
-                except Exception as e:
-                    print(f"Failed to open {json_file}: {e}")
+                data = _api.safe_json_load(json_file)
+                if not data:
+                    data = {}
             else:
-                data = {
-                    'modelId': modelId,
-                    'modelVersionId': modelVersionId,
-                    'modelPageUrl': f"https://civitai.com/models/{modelId}?modelVersionId={modelVersionId}",
-                    'sha256': sha256.upper()
-                }
-                with open(json_file, 'w', encoding='utf-8') as f:
-                    json.dump(data, f, indent=4)
+                data = {}
+
+            data.update({
+                'modelId': modelId,
+                'modelVersionId': modelVersionId,
+                'modelPageURL': f"https://civitai.com/models/{modelId}?modelVersionId={modelVersionId}",
+                'sha256': sha256.upper()
+            })
+            _api.safe_json_save(json_file, data)
 
         return modelId
     except requests.exceptions.Timeout:
@@ -1369,12 +1316,8 @@ def file_scan(folders, tag_finish, ver_finish, installed_finish, preview_finish,
             file_sha256 = None
             json_file = os.path.splitext(file_path)[0] + '.json'
             if os.path.exists(json_file):
-                try:
-                    with open(json_file, 'r', encoding='utf-8') as f:
-                        data = json.load(f)
-                        file_sha256 = data.get('sha256')
-                except Exception as e:
-                    print(f"Failed to read {json_file}: {e}")
+                data = _api.safe_json_load(json_file)
+                file_sha256 = data.get('sha256') if data else None
 
             # Find the specific model version based on SHA256 or filename
             if file_sha256:

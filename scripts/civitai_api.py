@@ -1,5 +1,4 @@
 import urllib.parse
-import datetime
 import requests
 import platform
 import json
@@ -64,6 +63,29 @@ def normalize_sha256(sha256_hash):
     if not sha256_hash:
         return None
     return sha256_hash.strip().upper()
+
+def safe_json_load(file_path):
+    """Safely load JSON file with error handling"""
+    if not os.path.exists(file_path):
+        return None
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except Exception as e:
+        print(f"Error loading JSON from {file_path}: {e}")
+        return None
+
+def safe_json_save(file_path, data):
+    """Safely save JSON file with error handling"""
+    try:
+        # Create directory if it doesn't exist
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        with open(file_path, 'w', encoding='utf-8') as f:
+            json.dump(data, f, indent=4, ensure_ascii=False)
+        return True
+    except Exception as e:
+        print(f"Error saving JSON to {file_path}: {e}")
+        return False
 
 
 def contenttype_folder(content_type, desc=None, custom_folder=None):
@@ -145,17 +167,11 @@ def model_list_html(json_data):
                     files_set.add(file.lower())
                     if file.endswith('.json'):
                         json_path = os.path.join(root, file)
-                        try:
-                            with open(json_path, 'r', encoding='utf-8') as f:
-                                json_file = json.load(f)
-                                if isinstance(json_file, dict):
-                                    sha256 = normalize_sha256(json_file.get('sha256'))
-                                    if sha256:
-                                        sha256_set.add(sha256)
-                                else:
-                                    print(f"Invalid JSON data in {json_path}. Expected a dictionary.")
-                        except Exception as e:
-                            print(f"Error decoding JSON in {json_path}: {e}")
+                        json_data = safe_json_load(json_path)
+                        if json_data and isinstance(json_data, dict):
+                            sha256 = normalize_sha256(json_data.get('sha256'))
+                            if sha256:
+                                sha256_set.add(sha256)
         return files_set, sha256_set
 
     ## === ANXETY EDITs ===

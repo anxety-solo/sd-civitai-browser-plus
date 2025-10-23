@@ -42,11 +42,9 @@ def saveSettings(ust, ct, pt, st, bf, cj, ol, hi, sn, es, ss, ts):
     }
 
     # Load the current contents of the config file into a dictionary
-    try:
-        with open(config, 'r', encoding='utf8') as file:
-            data = json.load(file)
-    except:
-        print(f"Cannot save settings, failed to open '{file}'")
+    data = _api.safe_json_load(config)
+    if not data:
+        print(f"Cannot save settings, failed to open '{config}'")
         print('Please try to manually repair the file or remove it to reset settings.')
         return
 
@@ -59,8 +57,7 @@ def saveSettings(ust, ct, pt, st, bf, cj, ol, hi, sn, es, ss, ts):
     data.update(settings_map)
 
     # Save the modified content back to the file
-    with open(config, 'w', encoding='utf-8') as file:
-        json.dump(data, file, indent=4)
+    if _api.safe_json_save(config, data):
         print(f"Updated settings to: {config}")
 
 # === ANXETY EDITs ===
@@ -335,8 +332,7 @@ def on_ui_tabs():
 
         def format_custom_subfolders():
             separator = '␞␞'
-            with open(gl.subfolder_json, 'r') as f:
-                data = json.load(f)
+            data = _api.safe_json_load(gl.subfolder_json) or {}
             # Filter out timestamp and non-string values
             filtered_data = {key: value for key, value in data.items()
                            if key != "created_at" and isinstance(value, str)}
