@@ -959,104 +959,152 @@ def get_models(file_path, gen_hash=None):
         return None
 
 ## === ANXETY EDITs ===
-def extract_version_from_filename(filename):
+def extract_version_from_ver_name(filename):
     """
-    Extract version from filename using various patterns.
-    Returns tuple (version_string, version_number) or (None, 0) if version not found.
+    Extracts the model family name and version from the model name string.
+    Returns: (family_name or None, version_parts: list[int])
     """
     version_patterns = [
-        r'v(\d+\.\d+)',  # v1.0, v2.1, etc.
-        r'v(\d+\.\d\d)', # v1.00, v2.10, etc.
-        r'v(\d+)',       # v1, v2, etc.
-        r'(\d+\.\d+)',   # 1.0, 2.1, etc. (without v)
-        r'(\d+\.\d\d)',  # 1.00, 2.10, etc. (without v)
-        r'(\d+)$'        # 1, 2, etc. at the end (without v)
+        r'[_\-]?v(\d+\.\d+)$',  # 1.0, _v2.1, -v3.2
+        r'[_\-]?v(\d+)$',       # v1, _v2, -v3
+        # r'[_\-]?(\d+\.\d+)$',   # 1.0, _2.1, -3.2
+        # r'[_\-]?(\d+)$',        # 1, _2, -3
     ]
-
     for pattern in version_patterns:
         match = re.search(pattern, filename, re.IGNORECASE)
         if match:
             version_str = match.group(1)
-            try:
-                # Convert to number for comparison
-                if '.' in version_str:
-                    version_num = float(version_str)
-                else:
-                    version_num = int(version_str)
-                return version_str, version_num
-            except ValueError:
-                continue
+            parts = [int(p) for p in version_str.split('.') if p.isdigit()]
+            # Remove the matched part from the end of the string to get the family name
+            family = filename[:match.start()].strip("_- .")
+            # If family looks like a pure version (for example, 'v3'), treat it as None
+            if not family or re.fullmatch(r'v?\d+(\.\d+)?', family, re.IGNORECASE):
+                family = None
 
-    return None, 0
+            return family, parts
+    return None, []
 
-def version_match(file_paths, api_response):
-    """Check model updates by comparing version names"""
+def compare_version_parts(a_parts, b_parts):
+    """
+    Compare two version parts lists.
+    Returns:
+      -1 if a < b,
+      0 if a == b,
+      1 if a > b
+    """
+    max_len = max(len(a_parts), len(b_parts))
+    a = a_parts + [0] * (max_len - len(a_parts))
+    b = b_parts + [0] * (max_len - len(b_parts))
+    return (a > b) - (a < b)
+
+def version_match(file_paths, api_response, log=False):
+    """
+    Checking model updates by version.
+    - If opts.precise_version_check = False:
+        Compares only versions (without families).
+    - If True:
+        Compares versions by family, if family exists.
+        If family=None — switches to comparison without family.
+    """
+    precise_check = getattr(opts, 'precise_version_check', True)
     updated_models = []
     outdated_models = []
-    sha256_hashes = {}
 
-    # === 1. Collect SHA256 hashes from local JSON files ===
-    for file_path in file_paths:
-        json_path = f"{os.path.splitext(file_path)[0]}.json"
-        if os.path.exists(json_path):
-            try:
-                with open(json_path, 'r', encoding='utf-8') as f:
-                    json_data = json.load(f)
-                    sha256 = json_data.get('sha256')
-                    if sha256:
-                        sha256_hashes[os.path.basename(file_path)] = sha256.upper()
-            except Exception as e:
-                print(f"Failed to read {json_path}: {e}")
+    # === 1. Collecting installed SHA256 ===
+    installed_hashes = set()
+    for path in file_paths:
+        json_path = f"{os.path.splitext(path)[0]}.json"
+        data = _api.safe_json_load(json_path)
+        if data:
+            sha = data.get('sha256', '')
+            if sha:
+                installed_hashes.add(sha.upper())
 
-    # === 2. Prepare set of (filename_without_ext, sha256) ===
-    file_names_and_hashes = set()
-    for file_path in file_paths:
-        file_name = os.path.basename(file_path)
-        file_name_no_ext = os.path.splitext(file_name)[0]
-        file_sha256 = sha256_hashes.get(file_name, '').upper()
-        file_names_and_hashes.add((file_name_no_ext, file_sha256))
+    if log:
+        print(f"[LOG] {len(installed_hashes)} installed model hashes found")
 
-    # === 3. Compare with API response ===
-    for item in api_response.get('items', []):
-        model_versions = item.get('modelVersions', [])
+    # === 2. Determine installed versions and families ===
+    installed_map = {}  # family -> list of versions
+    installed_all = []  # all versions regardless of family
+
+    for model in api_response.get('items', []):
+        for ver in model.get('modelVersions', []):
+            ver_name = ver.get('name', '')
+            family, ver_parts = extract_version_from_ver_name(ver_name)
+
+            for file_entry in ver.get('files', []):
+                sha = file_entry.get('hashes', {}).get('SHA256', '').upper()
+                if sha in installed_hashes:
+                    if precise_check and family:
+                        installed_map.setdefault(family, []).append(ver_parts)
+                        if log:
+                            print(f"[LOG] Family '{family}' version {ver_parts} is installed")
+                    else:
+                        installed_all.append(ver_parts)
+                        if log:
+                            print(f"[LOG] Version {ver_parts} is installed (without family)")
+                    break
+
+    # === 3. Compare with available versions ===
+    for model in api_response.get('items', []):
+        model_id = model.get('id')
+        model_name = model.get('name')
+        model_versions = model.get('modelVersions', [])
+
         if not model_versions:
             continue
 
-        available_versions = []
-        installed_versions = []
-        match_found = False
+        available_map = {}  # dictionary: { family_name: [list of versions] } — all versions grouped by family
+        available_all = []  # list of all versions without grouping by family (used if precise_check=False)
 
-        # Collect all available versions
-        for model_version in model_versions:
-            version_name = model_version.get('name', '')
-            _, version_num = extract_version_from_filename(version_name)
-            available_versions.append(version_num)
+        for ver in model_versions:
+            ver_name = ver.get('name', '')
+            family, ver_parts = extract_version_from_ver_name(ver_name)
 
-            # Check each file inside the version
-            for file_entry in model_version.get('files', []):
-                entry_name = os.path.splitext(file_entry.get('name', ''))[0]
-                entry_sha = file_entry.get('hashes', {}).get('SHA256', '').upper()
+            if precise_check and family:
+                available_map.setdefault(family, []).append(ver_parts)
+            else:
+                available_all.append(ver_parts)
 
-                # Check for local match by name or hash
-                for local_name, local_sha in file_names_and_hashes:
-                    if local_name == entry_name or (local_sha and local_sha == entry_sha):
-                        installed_versions.append(version_num)
-                        match_found = True
-                        break
-                if match_found:
-                    break
+        has_outdated = False
 
-        if not match_found:
-            continue
+        if precise_check and available_map:
+            # Сomparison by families
+            for fam_key, avail_versions in available_map.items():
+                installed_versions = installed_map.get(fam_key, [])
+                if not installed_versions:
+                    continue
 
-        max_installed_version = max(installed_versions) if installed_versions else 0
-        max_available_version = max(available_versions) if available_versions else 0
+                max_inst = max(installed_versions, key=lambda x: x or [0])
+                max_avail = max(avail_versions, key=lambda x: x or [0])
+                cmp = compare_version_parts(max_inst, max_avail)
 
-        # Model is up to date if installed version >= latest version
-        if max_installed_version >= max_available_version:
-            updated_models.append((f"&ids={item['id']}", item['name']))
+                if cmp < 0:
+                    has_outdated = True
+                    if log:
+                        print(f"[LOG] '{model_name}' family '{fam_key}': outdated ({max_inst} < {max_avail})")
+                elif log:
+                    print(f"[LOG] '{model_name}' family '{fam_key}': up-to-date ({max_inst} >= {max_avail})")
+
         else:
-            outdated_models.append((f"&ids={item['id']}", item['name']))
+            # Сomparison without families
+            if not installed_all:
+                continue
+            max_inst = max(installed_all, key=lambda x: x or [0])
+            max_avail = max(available_all, key=lambda x: x or [0])
+            cmp = compare_version_parts(max_inst, max_avail)
+
+            if cmp < 0:
+                has_outdated = True
+                if log:
+                    print(f"[LOG] '{model_name}': outdated ({max_inst} < {max_avail})")
+            elif log:
+                print(f"[LOG] '{model_name}': up-to-date ({max_inst} >= {max_avail})")
+
+        if has_outdated:
+            outdated_models.append((f"&ids={model_id}", model_name))
+        else:
+            updated_models.append((f"&ids={model_id}", model_name))
 
     return updated_models, outdated_models
 

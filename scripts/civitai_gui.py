@@ -1310,6 +1310,16 @@ def on_ui_settings():
     )
 
     shared.opts.add_option(
+        'precise_version_check',
+        shared.OptionInfo(
+            default=True,
+            label='Precise model family version comparison',
+            section=browser,
+            category_id=cat_id
+        ).info('Check for updates using family and version (if disabled, compares only num version patterns)')
+    )
+
+    shared.opts.add_option(
         'custom_civitai_proxy',
         shared.OptionInfo(
             default=r'',

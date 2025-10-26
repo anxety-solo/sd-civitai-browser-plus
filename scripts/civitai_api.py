@@ -237,37 +237,65 @@ def model_list_html(json_data):
             imgtag = '<img src="./file=html/card-no-preview.png" onerror="this.onerror=null;this.src=\'./file=html/card-no-preview.jpg\';"></img>'
 
         # Install status - check if model is installed and determine if it's outdated
+        ## Note: Sensitive check for updates by `name_match`... (It is possible that an outdated version of the model will not be marked as outdated)
         installstatus = ''
         model_versions = item.get('modelVersions', [])
         if model_versions:
-            available_versions = []
-            installed_versions = []
+            precise_check = getattr(opts, 'precise_version_check', True)
+            installed_map, available_map = {}, {}  # family → list of version parts
+            installed_all, available_all = [], []  # all versions (no family grouping)
 
+            # --- Collect version and installation info ---
             for version in model_versions:
                 version_name = version.get('name', '')
-                _, version_num = _file.extract_version_from_filename(version_name)
-                available_versions.append(version_num)
+                family, version_parts = _file.extract_version_from_ver_name(version_name)
 
-                # Check if this version is installed
+                if precise_check and family:
+                    available_map.setdefault(family, []).append(version_parts)
+                else:
+                    available_all.append(version_parts)
+
+                # Check if any file of this version is installed
                 for file in version.get('files', []):
-                    file_name = file['name']
+                    file_name = file['name'].lower()
                     file_sha256 = normalize_sha256(file.get('hashes', {}).get('SHA256', ''))
-                    name_match = file_name.lower() in existing_files
-                    sha256_match = file_sha256 and file_sha256 in existing_files_sha256
+                    name_match = file_name in existing_files
+                    sha_match = file_sha256 and file_sha256 in existing_files_sha256
 
-                    if name_match or sha256_match:
-                        installed_versions.append(version_num)
+                    if sha_match or name_match:
+                        if precise_check and family:
+                            installed_map.setdefault(family, []).append(version_parts)
+                        else:
+                            installed_all.append(version_parts)
                         break
 
-            # Determine status based on version comparison
-            if installed_versions:
-                max_installed_version = max(installed_versions)
-                max_available_version = max(available_versions) if available_versions else 0
+            # Check installed
+            has_installed = bool(installed_map or installed_all)
+            if has_installed:
+                has_outdated = False
 
-                if max_installed_version >= max_available_version:
-                    installstatus = 'civmodelcardinstalled'
-                else:
+                def is_outdated(inst, avail):
+                    """Compare max installed and available versions"""
+                    max_inst = max(inst, key=lambda x: x or [0])
+                    max_avail = max(avail, key=lambda x: x or [0])
+                    cmp = _file.compare_version_parts(max_inst, max_avail)
+                    return cmp < 0
+
+                # Comparison by families
+                if precise_check and available_map:
+                    for fam, avail in available_map.items():
+                        inst = installed_map.get(fam)
+                        if inst and is_outdated(inst, avail):
+                            has_outdated = True
+                            break
+                # Comparison without families
+                elif installed_all and available_all:
+                    has_outdated = is_outdated(installed_all, available_all)
+
+                if has_outdated:
                     installstatus = 'civmodelcardoutdated'
+                else:
+                    installstatus = 'civmodelcardinstalled'
 
         # Model name for JS and HTML
         model_name_js = model_name.replace("'", "\\'")
