@@ -144,7 +144,7 @@ def contenttype_folder(content_type, desc=None, custom_folder=None):
         try:
             result = folder_resolver()
             if result is None:
-                print(f"Warning: Folder resolver returned None for content_type '{content_type}'")
+                debug_print(f"Warning: Folder resolver returned None for content_type '{content_type}'")
             return result
         except Exception as e:
             debug_print(f"Error resolving folder for content_type '{content_type}': {e}")
@@ -387,6 +387,7 @@ def model_list_html(json_data):
     model_folders = {
         os.path.join(contenttype_folder(item['type'], item['description']))
         for item in json_data['items']
+        if contenttype_folder(item['type'], item['description']) is not None
     }
     existing_files, existing_files_sha256 = collect_existing_files(model_folders)
 
@@ -854,11 +855,11 @@ def update_model_info(model_string=None, model_version=None, only_html=False, in
                     is_LORA = True
                 desc = item['description']
 
-                # FIX: Add check for None
+                # Add check for None
                 model_folder = contenttype_folder(content_type, desc)
                 if model_folder is None:
                     print(f"Warning: Could not determine folder for content type '{content_type}', skipping model {item['name']}")
-                    continue  # Skip this model
+                    continue
 
                 model_name = item['name']
                 model_folder = os.path.join(contenttype_folder(content_type, desc))
