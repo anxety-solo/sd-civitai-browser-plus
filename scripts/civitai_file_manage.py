@@ -1358,41 +1358,55 @@ def file_scan(folders, tag_finish, ver_finish, installed_finish, preview_finish,
 
         for file_path, id_value in zip(file_paths, all_ids):
             install_path, file_name = os.path.split(file_path)
-            save_path, name = get_save_path_and_name(install_path, file_name, api_response)
 
-            # Get SHA256 hash for the file to find the specific version
-            file_sha256 = None
-            json_file = os.path.splitext(file_path)[0] + '.json'
-            if os.path.exists(json_file):
-                data = _api.safe_json_load(json_file)
-                file_sha256 = data.get('sha256') if data else None
+            try:
+                save_path, name = get_save_path_and_name(install_path, file_name, api_response)
 
-            # Find the specific model version based on SHA256 or filename
-            if file_sha256:
-                model_version, item = find_model_version_by_sha256(api_response, file_sha256)
-            else:
-                model_version, item = find_model_version_by_filename(api_response, file_name)
+                # Get SHA256 hash for the file to find the specific version
+                file_sha256 = None
+                json_file = os.path.splitext(file_path)[0] + '.json'
+                if os.path.exists(json_file):
+                    data = _api.safe_json_load(json_file)
+                    file_sha256 = data.get('sha256') if data else None
 
-            html_path = os.path.join(save_path, f'{name}.html')
-
-            if create_html and not os.path.exists(html_path) or create_html and overwrite_toggle:
-                if model_version and item:
-                    # Use the specific model version name for HTML generation
-                    preview_html = _api.update_model_info(None, model_version.get('name'), True, id_value, api_response, True)
+                # Find the specific model version based on SHA256 or filename
+                if file_sha256:
+                    model_version, item = find_model_version_by_sha256(api_response, file_sha256)
                 else:
-                    # Fallback to first version if specific version not found
-                    model_versions = _api.update_model_versions(id_value, api_response)
-                    preview_html = _api.update_model_info(None, model_versions.get('value'), True, id_value, api_response, True)
-            else:
-                preview_html = None
-            completed_tags += 1
-            if progress != None:
-                progress(
-                    completed_tags / tag_count,
-                    desc=f"Saving tags{' & HTML' if preview_html else ''}... {completed_tags}/{tag_count} | {name}"
-                )
-            sub_folder = os.path.normpath(os.path.relpath(install_path, gl.main_folder))
-            save_model_info(install_path, file_name, sub_folder, sha256=file_sha256, preview_html=preview_html, api_response=api_response, overwrite_toggle=overwrite_toggle)
+                    model_version, item = find_model_version_by_filename(api_response, file_name)
+
+                html_path = os.path.join(save_path, f'{name}.html')
+
+                if create_html and not os.path.exists(html_path) or create_html and overwrite_toggle:
+                    if model_version and item:
+                        # Use the specific model version name for HTML generation
+                        preview_html = _api.update_model_info(None, model_version.get('name'), True, id_value, api_response, True)
+                    else:
+                        # Fallback to first version if specific version not found
+                        model_versions = _api.update_model_versions(id_value, api_response)
+                        preview_html = _api.update_model_info(None, model_versions.get('value'), True, id_value, api_response, True)
+                else:
+                    preview_html = None
+
+                completed_tags += 1
+                if progress != None:
+                    progress(
+                        completed_tags / tag_count,
+                        desc=f"Saving tags{' & HTML' if preview_html else ''}... {completed_tags}/{tag_count} | {name}"
+                    )
+                sub_folder = os.path.normpath(os.path.relpath(install_path, gl.main_folder))
+                save_model_info(install_path, file_name, sub_folder, sha256=file_sha256, preview_html=preview_html, api_response=api_response, overwrite_toggle=overwrite_toggle)
+
+            except Exception as e:
+                print(f"Error processing model {file_name}: {e}")
+                completed_tags += 1
+                if progress != None:
+                    progress(
+                        completed_tags / tag_count,
+                        desc=f"Skipped {name} due to error... {completed_tags}/{tag_count}"
+                    )
+                continue  # Skip this model and continue with the next
+
         if progress != None:
             progress(1, desc='All tags succesfully saved!')
         gl.scan_files = False

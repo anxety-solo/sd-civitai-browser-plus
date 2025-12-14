@@ -141,8 +141,16 @@ def contenttype_folder(content_type, desc=None, custom_folder=None):
     # Get the folder resolver function for the content type
     folder_resolver = content_type_map.get(content_type)
     if folder_resolver:
-        return folder_resolver()
+        try:
+            result = folder_resolver()
+            if result is None:
+                print(f"Warning: Folder resolver returned None for content_type '{content_type}'")
+            return result
+        except Exception as e:
+            debug_print(f"Error resolving folder for content_type '{content_type}': {e}")
+            return None
 
+    debug_print(f"Warning: Unknown content_type '{content_type}', no folder mapping found")
     return None
 
 def model_list_html(json_data):
@@ -845,6 +853,13 @@ def update_model_info(model_string=None, model_version=None, only_html=False, in
                 if content_type == 'LORA':
                     is_LORA = True
                 desc = item['description']
+
+                # FIX: Add check for None
+                model_folder = contenttype_folder(content_type, desc)
+                if model_folder is None:
+                    print(f"Warning: Could not determine folder for content type '{content_type}', skipping model {item['name']}")
+                    continue  # Skip this model
+
                 model_name = item['name']
                 model_folder = os.path.join(contenttype_folder(content_type, desc))
                 model_uploader = None
