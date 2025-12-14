@@ -1477,10 +1477,19 @@ def request_civit_api(api_url=None, skip_error_check=False):
     proxies, ssl = get_proxies()
     try:
         response = requests.get(api_url, headers=headers, timeout=(60, 30), proxies=proxies, verify=ssl)
+        if not response.text or response.text.strip() == '':
+            print(f"CivitAI API returned empty response for: {api_url}")
+            return 'error'
+
         if skip_error_check:
             response.encoding = 'utf-8'
-            data = json.loads(response.text)
-            return data
+            try:
+                data = json.loads(response.text)
+                return data
+            except json.JSONDecodeError as e:
+                print(f"CivitAI API: JSON decode error - {e}")
+                return 'error'
+
         response.raise_for_status()
     except requests.exceptions.HTTPError as e:
         if e.response.status_code == 404:

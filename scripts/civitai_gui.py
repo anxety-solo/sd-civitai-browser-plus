@@ -161,11 +161,15 @@ def get_base_models():
         print("Couldn't fetch latest baseModel options, using default.")
         return default_options
 
-    try:
-        options = json.loads(json_return['error']['message'])[0]['errors'][0][0]['values']
-        return options
-    except (KeyError, IndexError) as e:
-        print(f"Basemodel fetch error extracting options: {e}")
+    if 'error' in json_return and 'message' in json_return['error']:
+        try:
+            parsed_message = json.loads(json_return['error']['message'])
+            options = parsed_message[0]['errors'][0][0]['values']
+            return options
+        except (KeyError, IndexError, json.JSONDecodeError, TypeError) as e:
+            print(f"Basemodel fetch error extracting options: {e}")
+            return default_options
+    else:
         return default_options
 
 ## === ANXETY EDITs ===
