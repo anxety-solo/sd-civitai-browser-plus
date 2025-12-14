@@ -193,10 +193,12 @@ def _resize_image_bytes(image_bytes, target_size=512):
     else:
         new_size = (int(width * target_size / height), target_size)
 
+    resized_image = image.resize(new_size, Image.LANCZOS)
+
     output = io.BytesIO()
-    image.resize(new_size, Image.LANCZOS).save(output, format="PNG")
+    resized_image.save(output, format="PNG")
     output.seek(0)
-    return output
+    return output.getvalue()  # Return bytes, not BytesIO object
 
 def save_preview(file_path, api_response, overwrite_toggle=False, sha256=None):
     proxies, ssl = _api.get_proxies()
@@ -230,20 +232,19 @@ def save_preview(file_path, api_response, overwrite_toggle=False, sha256=None):
                                 resize_saved = getattr(opts, 'resize_preview_on_save', True)
                                 if resize_saved:
                                     resize_size = getattr(opts, 'resize_preview_size', 512)
-                                    resized_image = _resize_image_bytes(response.content, resize_size)
+                                    image_data = _resize_image_bytes(response.content, resize_size)
                                 else:
                                     # Save original size
-                                    resized_image = io.BytesIO(response.content)
-                                    resized_image.seek(0)
+                                    image_data = response.content
 
                                 if IS_KAGGLE:
                                     import sd_image_encryption  # Import Module for Encrypt Image
-                                    img = Image.open(resized_image)
+                                    img = Image.open(io.BytesIO(image_data))
                                     imginfo = img.info or {}
                                     if not all(key in imginfo for key in ['Encrypt', 'EncryptPwdSha']):
                                         sd_image_encryption.EncryptedImage.from_image(img).save(image_path)
                                 else:
-                                    image_path.write_bytes(resized_image.read())
+                                    image_path.write_bytes(image_data)
 
                                 print(f"Preview saved at: {image_path}")
                             else:
@@ -302,23 +303,33 @@ def save_images(preview_html, model_filename, install_path, sub_folder, api_resp
         img_url = urllib.parse.quote(img_url, safe=':/=')
         try:
             with urllib.request.urlopen(img_url) as url:
-                img_data = url.read()
+                image_data = url.read()
 
                 # Check if resize is enabled for saved images
                 resize_saved = getattr(opts, 'resize_preview_on_save', True)
                 if resize_saved:
                     resize_size = getattr(opts, 'resize_preview_size', 512)
-                    resized_image = _resize_image_bytes(img_data, resize_size)
-                    img = Image.open(resized_image)
-                else:
-                    img = Image.open(io.BytesIO(img_data))
+                    image_data = _resize_image_bytes(image_data, resize_size)
+
+                img = Image.open(io.BytesIO(image_data))
 
                 if img.mode in ('RGBA', 'LA', 'P'):
-                    # Keep transparency for PNG
-                    pass
+                    pass  # Keep transparency
                 elif img.mode != 'RGB':
                     img = img.convert('RGB')
-                img.save(os.path.join(image_path, filename), 'PNG')
+
+                save_path = os.path.join(image_path, filename)
+
+                if IS_KAGGLE:
+                    import sd_image_encryption
+                    imginfo = img.info or {}
+                    if not all(key in imginfo for key in ['Encrypt', 'EncryptPwdSha']):
+                        sd_image_encryption.EncryptedImage.from_image(img).save(save_path)
+                    else:
+                        img.save(save_path, 'PNG')
+                else:
+                    img.save(save_path, 'PNG')
+
                 print(f"Downloaded image: {filename}")
                 downloaded_count += 1
 
