@@ -1122,7 +1122,7 @@ def version_match(file_paths, api_response, log=False):
 def get_content_choices(scan_choices=False):
     content_list = [
         'Checkpoint', 'TextualInversion', 'LORA', 'Poses', 'Controlnet',
-        'AestheticGradient', 'VAE', 'Upscaler', 'MotionModule', 'Wildcards', 'Workflows', 'Other'
+        'VAE', 'Upscaler', 'Wildcards', 'AestheticGradient', 'MotionModule', 'Workflows', 'Other'
     ]
     if scan_choices:
         content_list.insert(0, 'All')

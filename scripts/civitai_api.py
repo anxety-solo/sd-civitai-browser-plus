@@ -47,7 +47,7 @@ def is_early_access(version_data):
     return isinstance(avail, str) and avail == 'EarlyAccess'
 
 # This nsfwlevel system is not accurate...
-def is_model_nsfw(model_data, nsfw_level=8):
+def is_model_nsfw(model_data, nsfw_level=12):
     """Determine if a model is NSFW based on its metadata and first image"""
     if model_data.get('nsfw'):
         return True
@@ -112,7 +112,7 @@ def contenttype_folder(content_type, desc=None, custom_folder=None):
     # Mapping for content types
     content_type_map = {
         'modelFolder': lambda: main_models,
-        'Checkpoint': lambda: resolve_path('ckpt_dir', main_models / 'Stable-diffusion'),
+        'Checkpoint': lambda: resolve_path('ckpt_dir', resolve_path('ckpt_dirs', main_models / 'Stable-diffusion')),
         'TextualInversion': lambda: resolve_path('embeddings_dir', main_data / 'embeddings'),
         'AestheticGradient': lambda: (Path(custom_folder) if custom_folder else ext_dir / 'stable-diffusion-webui-aesthetic-gradients') / 'aesthetic_embeddings',
         'LORA': lambda: resolve_path('lora_dir', main_models / 'Lora'),
@@ -122,7 +122,7 @@ def contenttype_folder(content_type, desc=None, custom_folder=None):
         'MotionModule': lambda: ext_dir / 'sd-webui-animatediff' / 'model',
         'Workflows': lambda: main_models / 'Workflows',
         'Other': lambda: main_models / 'adetailer' if 'ADETAILER' in desc_upper else main_models / 'Other',
-        'Wildcards': lambda: (ext_dir / 'UnivAICharGen' / 'wildcards') if (ext_dir / 'UnivAICharGen' / 'wildcards').exists() else (ext_dir / 'sd-dynamic-prompts' / 'wildcards'),
+        'Wildcards': lambda: ext_dir / 'sd-dynamic-prompts' / 'wildcards',
         'Upscaler': lambda: _resolve_upscaler_folder(desc_upper, main_models, resolve_path)
     }
 
@@ -145,6 +145,7 @@ def contenttype_folder(content_type, desc=None, custom_folder=None):
             result = folder_resolver()
             if result is None:
                 debug_print(f"Warning: Folder resolver returned None for content_type '{content_type}'")
+                return None
             return result
         except Exception as e:
             debug_print(f"Error resolving folder for content_type '{content_type}': {e}")
@@ -170,6 +171,8 @@ def model_list_html(json_data):
         files_set = set()
         sha256_set = set()
         for folder in model_folders:
+            if folder is None:
+                continue
             for root, _, files in os.walk(folder, followlinks=True):
                 for file in files:
                     files_set.add(file.lower())
@@ -209,7 +212,14 @@ def model_list_html(json_data):
             display_version = item['modelVersions'][0]
 
         base_model = display_version.get('baseModel', 'Not Found') if display_version else 'Not Found'
-        date = display_version.get('publishedAt', 'Not Found').split('T')[0] if display_version and 'publishedAt' in display_version else 'Not Found'
+        if display_version and 'publishedAt' in display_version:
+            published_at = display_version.get('publishedAt')
+            if published_at:
+                date = published_at.split('T')[0]
+            else:
+                date = 'Not Found'
+        else:
+            date = 'Not Found'
 
         early_access = is_early_access(display_version) if display_version else False
         early_access_class = 'early-access' if early_access else ''
@@ -384,11 +394,11 @@ def model_list_html(json_data):
     json_data['items'] = filtered_items
 
     # Collect model folders
-    model_folders = {
-        os.path.join(contenttype_folder(item['type'], item['description']))
-        for item in json_data['items']
-        if contenttype_folder(item['type'], item['description']) is not None
-    }
+    model_folders = set()
+    for item in json_data['items']:
+        folder = contenttype_folder(item['type'], item['description'])
+        if folder is not None:
+            model_folders.add(str(folder))
     existing_files, existing_files_sha256 = collect_existing_files(model_folders)
 
     # Build HTML
@@ -855,12 +865,6 @@ def update_model_info(model_string=None, model_version=None, only_html=False, in
                     is_LORA = True
                 desc = item['description']
 
-                # Add check for None
-                model_folder = contenttype_folder(content_type, desc)
-                if model_folder is None:
-                    print(f"Warning: Could not determine folder for content type '{content_type}', skipping model {item['name']}")
-                    continue
-
                 model_name = item['name']
                 model_folder = os.path.join(contenttype_folder(content_type, desc))
                 model_uploader = None
@@ -906,7 +910,7 @@ def update_model_info(model_string=None, model_version=None, only_html=False, in
                     else:
                         model_desc = '<h3>About this version:</h3>\n' + version_about.strip()
 
-                if selected_version['trainedWords']:
+                if selected_version.get('trainedWords'):
                     output_training = ','.join(selected_version['trainedWords'])
                     output_training = re.sub(r'<[^>]*:[^>]*>', '', output_training)
                     output_training = re.sub(r', ?', ', ', output_training)
