@@ -116,6 +116,8 @@ def contenttype_folder(content_type, desc=None, custom_folder=None):
         'TextualInversion': lambda: resolve_path('embeddings_dir', main_data / 'embeddings'),
         'AestheticGradient': lambda: (Path(custom_folder) if custom_folder else ext_dir / 'stable-diffusion-webui-aesthetic-gradients') / 'aesthetic_embeddings',
         'LORA': lambda: resolve_path('lora_dir', main_models / 'Lora'),
+        'LoCon': lambda: resolve_path('lora_dir', main_models / 'Lora'), # 💩
+        'DoRA': lambda: resolve_path('lora_dir', main_models / 'Lora'),  # 💩
         'VAE': lambda: resolve_path('vae_dir', main_models / 'VAE'),
         'Controlnet': lambda: resolve_path('controlnet_dir', main_models / 'ControlNet'),
         'Poses': lambda: main_models / 'Poses',
