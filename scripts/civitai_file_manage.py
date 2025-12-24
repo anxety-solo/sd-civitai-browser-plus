@@ -378,7 +378,6 @@ def card_update(gr_components, model_name, list_versions, is_install):
 
 def list_files(folders):
     model_files = []
-
     extensions = ['.pt', '.ckpt', '.pth', '.safetensors', '.th', '.zip', '.vae']
 
     for folder in folders:
@@ -467,6 +466,8 @@ def model_from_sent(model_name, content_type):
         content_type = ['Checkpoint']
     elif 'lora' in content_type:
         content_type = ['LORA']
+    elif 'detection' in content_type:
+        content_type = ['Detection']
 
     extensions = ['.pt', '.ckpt', '.pth', '.safetensors', '.th', '.zip', '.vae']
 
@@ -1121,7 +1122,7 @@ def version_match(file_paths, api_response, log=False):
 
 def get_content_choices(scan_choices=False):
     content_list = [
-        'Checkpoint', 'TextualInversion', 'LORA', 'Poses', 'Controlnet',
+        'Checkpoint', 'TextualInversion', 'LORA', 'Poses', 'Controlnet', 'Detection',
         'VAE', 'Upscaler', 'Wildcards', 'AestheticGradient', 'MotionModule', 'Workflows', 'Other'
     ]
     if scan_choices:

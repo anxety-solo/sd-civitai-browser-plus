@@ -123,6 +123,7 @@ def contenttype_folder(content_type, desc=None, custom_folder=None):
         'Poses': lambda: main_models / 'Poses',
         'MotionModule': lambda: ext_dir / 'sd-webui-animatediff' / 'model',
         'Workflows': lambda: main_models / 'Workflows',
+        'Detection': lambda: main_models / 'adetailer',
         'Other': lambda: main_models / 'adetailer' if 'ADETAILER' in desc_upper else main_models / 'Other',
         'Wildcards': lambda: ext_dir / 'sd-dynamic-prompts' / 'wildcards',
         'Upscaler': lambda: _resolve_upscaler_folder(desc_upper, main_models, resolve_path)
@@ -1247,6 +1248,10 @@ def update_model_info(model_string=None, model_version=None, only_html=False, in
             version_id
         )
 
+        # === ANXETY EDIT ===
+        installed_model_filename = None
+        extensions = ['.pt', '.ckpt', '.pth', '.safetensors', '.th', '.zip', '.vae']
+
         for root, dirs, files in os.walk(model_folder, followlinks=True):
             for filename in files:
                 if filename.endswith('.json'):
@@ -1259,6 +1264,15 @@ def update_model_info(model_string=None, model_version=None, only_html=False, in
                                 folder_location = root
                                 BtnDownInt = False
                                 BtnDel = True
+
+                                # Find the actual model file with same base name
+                                base_name = os.path.splitext(filename)[0]
+                                for model_file in files:
+                                    if os.path.splitext(model_file)[0] == base_name:
+                                        file_ext = os.path.splitext(model_file)[1].lower()
+                                        if file_ext in extensions:
+                                            installed_model_filename = model_file
+                                            break
                                 break
                         except Exception as e:
                             print(f"Error decoding JSON: {str(e)}")
@@ -1269,6 +1283,7 @@ def update_model_info(model_string=None, model_version=None, only_html=False, in
                         folder_location = root
                         BtnDownInt = False
                         BtnDel = True
+                        installed_model_filename = filename
                         break
 
             if folder_location != 'None':
@@ -1288,6 +1303,13 @@ def update_model_info(model_string=None, model_version=None, only_html=False, in
 
         relative_path = os.path.relpath(folder_location, model_folder)
         default_subfolder = f"{os.sep}{relative_path}" if relative_path != '.' else default_subfolder if BtnDel == False else 'None'
+
+        # Use installed filename if model is installed
+        if installed_model_filename and BtnDel:
+            display_model_filename = installed_model_filename
+        else:
+            display_model_filename = cleaned_name(model_filename)
+
         if gl.isDownloading:
             item = gl.download_queue[0]
             if int(model_id) == int(item['model_id']):
@@ -1308,7 +1330,7 @@ def update_model_info(model_string=None, model_version=None, only_html=False, in
             gr.Button.update(interactive=BtnImage),                                                 # Images Button
             gr.Button.update(visible=BtnDel, interactive=BtnDel),                                   # Delete Button
             gr.Dropdown.update(choices=file_list, value=default_file, interactive=True),            # File List
-            gr.Textbox.update(value=cleaned_name(model_filename), interactive=True),                # Model File Name
+            gr.Textbox.update(value=display_model_filename, interactive=True),                      # Model File Name
             gr.Textbox.update(value=dl_url),                                                        # Download URL
             gr.Textbox.update(value=model_id),                                                      # Model ID
             gr.Textbox.update(value=sha256_value),                                                  # SHA256

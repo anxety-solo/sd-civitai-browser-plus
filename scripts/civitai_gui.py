@@ -1479,6 +1479,7 @@ def on_ui_settings():
         'TextualInversion',
         'Poses',
         'Controlnet',
+        'Detection',
         'MotionModule',
         ('Upscaler', 'SWINIR'),
         ('Upscaler', 'REALESRGAN'),
