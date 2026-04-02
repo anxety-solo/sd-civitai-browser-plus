@@ -41,6 +41,65 @@ def get_display_type(type_name):
     """Return short/clear display name for model type"""
     return MODEL_TYPE_DISPLAY_NAMES.get(type_name, type_name)
 
+def get_base_model_abbr(model_name: str):
+    """Return a short abbreviation for a base model name, or None if unknown/empty"""
+    if not model_name or model_name in ('Not Found', ''):
+        return None
+    normalized = re.sub(r'[\s\-_\.]', '', model_name.lower())
+    MODEL_BASE_MAP = {
+        'anima': 'Anima',
+        'cogvideox': 'CVX',
+        'hidream': 'HD',
+        'hunyuan': 'HYV',
+        'ltxv': 'LTXV',
+        'lumina': 'Lum',
+        'noobai': 'NAI',
+        'pixart': 'PA',
+        'playground': 'PG',
+        'pony': 'Pony',
+        'qwen': 'Qwen',
+        'sdxl': 'XL',
+        'sora': 'Sora',
+        'svd': 'SVD',
+        'veo': 'Veo',
+        'wan': 'Wan',
+        'zimageturbo': 'ZIT',
+        'zimagebase': 'ZIB',
+        'other': 'Other',
+    }
+    for key, abbr in MODEL_BASE_MAP.items():
+        if key in normalized:
+            return abbr
+
+    # SD major version: 'SD 1.5' -> 'SD1', 'SD 2.1' -> 'SD2'
+    if m := re.match(r'sd\s*(\d)', model_name, re.IGNORECASE):
+        return f'SD{m.group(1)}'
+
+    # Flux.N + letter: 'Flux.1 D' -> 'F1D', 'Flux.1 S' -> 'F1S'
+    if m := re.match(r'flux\.(\d+)\s+(\w)', model_name, re.IGNORECASE):
+        return f'F{m.group(1)}{m.group(2).upper()}'
+
+    # Flux.N bare: 'Flux.2' -> 'F2'
+    if m := re.match(r'flux\.(\d+)', model_name, re.IGNORECASE):
+        return f'F{m.group(1)}'
+
+    # Multi-word: initials of first two words
+    words = re.findall(r'[a-zA-Z]+', model_name)
+    if len(words) >= 2:
+        return ''.join(w[0].upper() for w in words[:2])
+
+    # Short name (< 5 chars): keep as-is
+    if len(model_name.replace(' ', '')) < 5:
+        return model_name.strip()
+
+    # Single CamelCase word: extract initials
+    if words:
+        parts = re.findall(r'[A-Z]{2,}|[A-Z][a-z0-9]*', words[0])
+        if len(parts) >= 2:
+            return ''.join(p[0].upper() for p in parts[:2])
+        return words[0][:2].upper()
+    return None
+
 def is_early_access(version_data):
     """Check if the model is an early access"""
     avail = version_data.get('availability')
@@ -325,6 +384,13 @@ def model_list_html(json_data):
         full_name = escape(model_name)
 
         ## Badges
+        base_abbr = get_base_model_abbr(base_model)
+        display_type = get_display_type(item['type'])
+        if base_abbr:
+            badge_label = f'{display_type}<span class="badge-sep"> | </span><span class="badge-base">{base_abbr}</span>'
+        else:
+            badge_label = display_type
+
         # Model Type Badge ( + Early Access)
         if early_access:
             # Gold badge with a lightning icon
@@ -333,11 +399,11 @@ def model_list_html(json_data):
                 '<svg class="early-access-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="currentColor">'
                 '<path d="M13 2L3 14h9l-1 8 10-12h-8z"/>'
                 '</svg>'
-                f'{get_display_type(item["type"])}'
+                f'{badge_label}'
                 '</div>'
             )
         else:
-            model_type_badge = f'<div class="model-type-badge {item["type"].lower()}">{get_display_type(item["type"])}</div>'
+            model_type_badge = f'<div class="model-type-badge {item["type"].lower()}">{badge_label}</div>'
 
         # NSFW Badge - only show for nsfw cards and if setting is enabled
         show_nsfw_badge = getattr(opts, 'show_nsfw_badge', True)
