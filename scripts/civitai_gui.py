@@ -25,19 +25,19 @@ def saveSettings(ust, ct, pt, st, bf, cj, ol, hi, sn, es, ss, ts):
 
     # Create a dictionary to map the settings to their respective variables
     settings_map = {
-        'civitai_interface/Search type:/value': ust,
-        'civitai_interface/Content type:/value': ct,
-        'civitai_interface/Time period:/value': pt,
-        'civitai_interface/Sort by:/value': st,
-        'civitai_interface/Base model:/value': bf,
-        'civitai_interface/Save info after download/value': cj,
-        'civitai_interface/Divide cards by date/value': False,  # This is a toggle, so its state does not matter here
-        'civitai_interface/Liked models only/value': ol,
-        'civitai_interface/Hide installed models/value': hi,
-        'civitai_interface/NSFW content/value': sn,
-        'civitai_interface/Exact search/value': es,
-        'civitai_interface/Tile size:/value': ss,
-        'civitai_interface/Tile count:/value': ts
+        'civitai_browser_ui/Search type:/value': ust,
+        'civitai_browser_ui/Content type:/value': ct,
+        'civitai_browser_ui/Time period:/value': pt,
+        'civitai_browser_ui/Sort by:/value': st,
+        'civitai_browser_ui/Base model:/value': bf,
+        'civitai_browser_ui/Save info after download/value': cj,
+        'civitai_browser_ui/Divide cards by date/value': False,  # This is a toggle, so its state does not matter here
+        'civitai_browser_ui/Liked models only/value': ol,
+        'civitai_browser_ui/Hide installed models/value': hi,
+        'civitai_browser_ui/NSFW content/value': sn,
+        'civitai_browser_ui/Exact search/value': es,
+        'civitai_browser_ui/Tile size:/value': ss,
+        'civitai_browser_ui/Tile count:/value': ts
     }
 
     # Load the current contents of the config file into a dictionary
@@ -47,8 +47,8 @@ def saveSettings(ust, ct, pt, st, bf, cj, ol, hi, sn, es, ss, ts):
         print('Please try to manually repair the file or remove it to reset settings.')
         return
 
-    # Remove any keys containing the text `civitai_interface`
-    keys_to_remove = [key for key in data if 'civitai_interface' in key]
+    # Remove any keys containing the text `civitai_browser_ui`
+    keys_to_remove = [key for key in data if 'civitai_browser_ui' in key]
     for key in keys_to_remove:
         del data[key]
 
@@ -200,7 +200,7 @@ def on_ui_tabs():
     content_choices = _file.get_content_choices()
     scan_choices = _file.get_content_choices(scan_choices=True)
 
-    with gr.Blocks() as civitai_interface:
+    with gr.Blocks() as civitai_browser_ui:
         ## Browser Tab
         with gr.Tab(label='Browser', elem_id='browserTab'):
             with gr.Row(elem_id='searchRow'):
@@ -212,7 +212,7 @@ def on_ui_tabs():
                     with gr.Row():
                         base_filter = gr.Dropdown(label='Base model:', multiselect=True, choices=get_base_models(), value=None, type='value', elem_id='centerText')
                     with gr.Row():
-                        period_type = gr.Dropdown(label='Time period:', choices=['All Time', 'Year', 'Month', 'Week', 'Day'], value='Month', type='value', elem_id='centerText')
+                        period_type = gr.Dropdown(label='Time period:', choices=['All Time', 'Year', 'Month', 'Week', 'Day'], value='Year', type='value', elem_id='centerText')
                         sort_type = gr.Dropdown(label='Sort by:', choices=['Newest','Oldest','Most Downloaded','Highest Rated','Most Liked','Most Buzz','Most Discussed','Most Collected','Most Images'], value='Highest Rated', type='value', elem_id='centerText')
                     with gr.Row(elem_id=component_id):
                         create_json = gr.Checkbox(label=f"Save info after download", value=True, elem_id=toggle1)
@@ -1106,7 +1106,7 @@ def on_ui_tabs():
         )
 
     tab_name = 'CivitAI Browser+'
-    return (civitai_interface, tab_name, 'civitai_interface'),
+    return (civitai_browser_ui, tab_name, 'civitai_browser_ui'),
 
 def subfolder_list(folder, desc=None):
     if folder == None:

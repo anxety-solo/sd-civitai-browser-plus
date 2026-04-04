@@ -123,7 +123,7 @@ function keydownHandler(e) {
 
     if (handled) {
         var currentTabContent = get_uiCurrentTabContent();
-        if (currentTabContent && currentTabContent.id === 'tab_civitai_interface') {
+        if (currentTabContent && currentTabContent.id === 'tab_civitai_browser_ui') {
             var refreshButton = currentTabContent.querySelector('#refreshBtn');
             if (!refreshButton) {
                 refreshButton = currentTabContent.querySelector('#refreshBtnL');
@@ -465,7 +465,7 @@ function modelInfoPopUp(modelName = null, content_type = null, no_message = fals
             if (button.textContent.includes('Browser+')) {
                 button.click();
 
-                const firstButton = document.querySelector('#tab_civitai_interface > div > div > div > button');
+                const firstButton = document.querySelector('#tab_civitai_browser_ui > div > div > div > button');
                 if (firstButton) {
                     firstButton.click();
                 }
