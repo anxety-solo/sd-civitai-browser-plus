@@ -261,13 +261,6 @@
     width: auto !important;
 }
 
-#togglesL {
-    margin-top: 3px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
 #toggles {
     margin-top: -10px;
     display: flex;
@@ -331,13 +324,6 @@
     margin-bottom: var(--layout-gap);
 }
 
-#toggle1L,
-#toggle2L,
-#toggle3L,
-#toggle4L,
-#toggle4L_api,
-#toggle5L,
-#toggle6L,
 #overwrite_toggle,
 #skip_hash_toggle,
 #do_html_gen {
@@ -495,8 +481,7 @@
     padding: 0px !important;
 }
 
-#refreshBtn > img,
-#refreshBtnL > img {
+#refreshBtn > img {
     margin: unset;
 }
 
@@ -581,8 +566,7 @@
 
 /* Customized Accordion Filter */
 
-#filterBox,
-#filterBoxL {
+#filterBox {
     align-self: end;
     height: 42px;
     max-width: 42px;
@@ -595,26 +579,18 @@
 #filterBox {
     background: var(--button-secondary-background-fill);
 }
-
-#filterBoxL {
-    background: var(--input-background-fill);
-}
-
-#filterBox:hover,
-#filterBoxL:hover {
+#filterBox:hover {
     background: var(--button-secondary-background-fill-hover);
 }
 
-#filterBox .label-wrap.open,
-#filterBoxL .label-wrap.open {
+#filterBox .label-wrap.open {
     border-bottom: unset !important;
     background: var(--button-secondary-background-fill-hover);
     border-radius: 7px !important;
     height: 40px;
 }
 
-#filterBox > div:nth-child(3),
-#filterBoxL > div:nth-child(3) {
+#filterBox > div:nth-child(3) {
     padding: 20px;
     position: absolute;
     border-radius: 10px;
@@ -634,8 +610,7 @@
     margin-top: 30px;
 }
 
-#toggle4 > label > span,
-#toggle4L > label > span {
+#toggle4 > label > span {
     color: var(--neutral-400);
 }
 
@@ -644,18 +619,11 @@
     background: var(--background-fill-primary);
 }
 
-#filterBoxL > div:nth-child(3),
-#toggle4L > div:nth-child(3) {
-    background: var(--neutral-950);
-}
-
-#filterBox > div:nth-child(2),
-#filterBoxL > div:nth-child(2) {
+#filterBox > div:nth-child(2) {
     padding: 10px !important;
 }
 
-#filterBox .gradio-slider input[type='number'],
-#filterBoxL .gradio-slider input[type='number'] {
+#filterBox .gradio-slider input[type='number'] {
     width: 70px !important;
 }
 
@@ -663,13 +631,11 @@
     width: 5em !important;
 }
 
-#filterBox > div:nth-child(2) > span:nth-child(1),
-#filterBoxL > div:nth-child(2) > span:nth-child(1) {
+#filterBox > div:nth-child(2) > span:nth-child(1) {
     display: none;
 }
 
-#filterBox > div:nth-child(2) > span:nth-child(2),
-#filterBoxL > div:nth-child(2) > span:nth-child(2) {
+#filterBox > div:nth-child(2) > span:nth-child(2) {
     transform: rotate(0deg) !important;
     transition: 0s !important;
     display: inline-block;
@@ -680,8 +646,7 @@
     overflow: hidden;
 }
 
-#filterBox > div:nth-child(2) > span:nth-child(2)::before,
-#filterBoxL > div:nth-child(2) > span:nth-child(2)::before {
+#filterBox > div:nth-child(2) > span:nth-child(2)::before {
     content: '';
     display: block;
     width: 100%;

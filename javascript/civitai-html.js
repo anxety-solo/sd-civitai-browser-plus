@@ -140,7 +140,7 @@ document.addEventListener('keydown', keydownHandler);
 
 // Function to adjust alignment of Filter Accordion
 function adjustFilterBoxAndButtons() {
-    const element = document.querySelector('#filterBox') || document.querySelector('#filterBoxL');
+    const element = document.querySelector('#filterBox');
     if (!element) return;
 
     const childDiv = element.querySelector('div:nth-child(3)');
@@ -245,7 +245,7 @@ function updateSVGIcons() {
     if (isDark) {
     }
 
-    const element = document.querySelector('#filterBox, #filterBoxL');
+    const element = document.querySelector('#filterBox');
     const childDiv = element?.querySelector('div:nth-child(3)');
 
     if (childDiv) {
@@ -254,24 +254,20 @@ function updateSVGIcons() {
 
     const style = document.createElement('style');
     style.innerHTML = `
-        #filterBox > div:nth-child(2) > span:nth-child(2)::before,
-        #filterBoxL > div:nth-child(2) > span:nth-child(2)::before {
+        #filterBox > div:nth-child(2) > span:nth-child(2)::before {
             background: url('${filterIconUrl}') no-repeat center center;
             background-size: contain;
         }
-        #refreshBtn > img,
-        #refreshBtnL > img {
+        #refreshBtn > img {
             content: url('${searchIconUrl}');
         }
 
         /* Gradio 4 */
-        #filterBox > button:nth-child(2),
-        #filterBoxL > button:nth-child(2) {
+        #filterBox > button:nth-child(2) {
             background: url('${filterIconUrl}') no-repeat center center !important;
             background-size: 22px !important;
         }
-        #filterBox > button:nth-child(2) > span,
-        #filterBoxL > button:nth-child(2) > span {
+        #filterBox > button:nth-child(2) > span {
             visibility: hidden;
         }
     `;
@@ -298,7 +294,7 @@ function createTooltip(element, hover_element, insertText) {
 
 // Function that closes filter dropdown if clicked outside the dropdown
 function setupClickOutsideListener() {
-    var filterBox = document.getElementById('filterBoxL') || document.getElementById('filterBox');
+    var filterBox = document.getElementById('filterBox');
     var filterButton = filterBox.children[1];
     var dropDown = filterBox.getElementsByTagName('div')[2];
 
@@ -1188,15 +1184,14 @@ function onPageLoad() {
         createAccordion(div, proxy, 'Proxy options', 'proxy-accordion');
     }
 
-    let toggle4L = document.getElementById('toggle4L');
     let toggle4 = document.getElementById('toggle4');
     let hash_toggle_hover = document.querySelector('#skip_hash_toggle > label');
     let hash_toggle = document.querySelector('#skip_hash_toggle');
     let do_html_gen_hover = document.querySelector('#do_html_gen > label');
     let do_html_gen = document.querySelector('#do_html_gen');
 
-    if (toggle4L || toggle4) {
-        let like_toggle = toggle4L || toggle4;
+    if (toggle4) {
+        let like_toggle = toggle4;
         let insertText = 'Requires an API Key\nConfigurable in CivitAI settings tab';
         createTooltip(like_toggle, like_toggle, insertText);
     }

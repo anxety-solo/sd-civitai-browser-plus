@@ -1,4 +1,3 @@
-import fnmatch
 import json
 import os
 import re
@@ -175,34 +174,27 @@ def get_base_models():
 ## === ANXETY EDITs ===
 def on_ui_tabs():
     page_header = getattr(opts, 'page_header', False)
-    lobe_directory = None
 
-    for root, dirs, files in os.walk(extensions_dir, followlinks=True):
-        for dir_name in fnmatch.filter(dirs, '*lobe*'):
-            lobe_directory = os.path.join(root, dir_name)
-            break
-
-    # Different ID's for Lobe Theme
-    component_id = 'togglesL' if lobe_directory else 'toggles'
-    toggle1 = 'toggle1L' if lobe_directory else 'toggle1'
-    toggle2 = 'toggle2L' if lobe_directory else 'toggle2'
-    toggle3 = 'toggle3L' if lobe_directory else 'toggle3'
-    toggle5 = 'toggle5L' if lobe_directory else 'toggle5'
-    toggle6 = 'toggle6L' if lobe_directory else 'toggle6'
-    refreshbtn = 'refreshBtnL' if lobe_directory else 'refreshBtn'
-    filterBox = 'filterBoxL' if lobe_directory else 'filterBox'
+    component_id = 'toggles'
+    toggle1 = 'toggle1'
+    toggle2 = 'toggle2'
+    toggle3 = 'toggle3'
+    toggle5 = 'toggle5'
+    toggle6 = 'toggle6'
+    refreshbtn = 'refreshBtn'
+    filterBox = 'filterBox'
 
     if page_header:
-        header = 'headerL' if lobe_directory else 'header'
+        header = 'header'
     else:
         header = 'header_off'
 
     api_key = getattr(opts, 'custom_api_key', '')
     if api_key:
-        toggle4 = 'toggle4L_api' if lobe_directory else 'toggle4_api'
+        toggle4 = 'toggle4_api'
         show_only_liked = True
     else:
-        toggle4 = 'toggle4L' if lobe_directory else 'toggle4'
+        toggle4 = 'toggle4'
         show_only_liked = False
 
     content_choices = _file.get_content_choices()
