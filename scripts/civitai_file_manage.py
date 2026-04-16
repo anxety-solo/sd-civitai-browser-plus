@@ -884,7 +884,8 @@ def find_and_save(api_response, sha256=None, file_name=None, json_file=None, no_
                 content['modelVersionId'] = model_version.get('id')
                 changed = True
             if 'modelPageURL' not in content:
-                content['modelPageURL'] = f"https://civitai.com/models/{item.get('id')}?modelVersionId={model_version.get('id')}"
+                # content['modelPageURL'] = f"https://civitai.com/models/{item.get('id')}?modelVersionId={model_version.get('id')}"
+                content['modelPageURL'] = f"https://civitai.red/models/{item.get('id')}?modelVersionId={model_version.get('id')}"
                 changed = True
         else:
             content['activation text'] = trained_tags
@@ -894,7 +895,8 @@ def find_and_save(api_response, sha256=None, file_name=None, json_file=None, no_
             # Always update these fields when overwrite is enabled
             content['modelId'] = item.get('id')
             content['modelVersionId'] = model_version.get('id')
-            content['modelPageURL'] = f"https://civitai.com/models/{item.get('id')}?modelVersionId={model_version.get('id')}"
+            # content['modelPageURL'] = f"https://civitai.com/models/{item.get('id')}?modelVersionId={model_version.get('id')}"
+            content['modelPageURL'] = f"https://civitai.red/models/{item.get('id')}?modelVersionId={model_version.get('id')}"
             changed = True
 
         _api.safe_json_save(json_file, content)
@@ -954,7 +956,8 @@ def get_models(file_path, gen_hash=None):
             data.update({
                 'modelId': modelId,
                 'modelVersionId': modelVersionId,
-                'modelPageURL': f"https://civitai.com/models/{modelId}?modelVersionId={modelVersionId}",
+                # 'modelPageURL': f"https://civitai.com/models/{modelId}?modelVersionId={modelVersionId}",
+                'modelPageURL': f"https://civitai.red/models/{modelId}?modelVersionId={modelVersionId}",
                 'sha256': sha256.upper()
             })
             _api.safe_json_save(json_file, data)

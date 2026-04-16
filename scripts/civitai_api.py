@@ -582,6 +582,11 @@ def create_api_url(content_type=None, sort_type=None, period_type=None, use_sear
         params['types'] = content_type
 
     ## === ANXETY EDITs ===
+    CIVITAI_URL_RE = re.compile(
+        r'^(https?://)?(www\.)?civitai\.(com|green|red)(/.*)?$',
+        re.IGNORECASE
+    )
+
     if use_search_term != 'None' and search_term:
         search_term = search_term.replace('\\', '\\\\').lower()
 
@@ -591,7 +596,8 @@ def create_api_url(content_type=None, sort_type=None, period_type=None, use_sear
             if not (search_term.startswith('"') and search_term.endswith('"')) and ' ' in search_term:
                 search_term = f'"{search_term}"'
 
-        if 'civitai.com' in search_term:
+        # Only specific civitai domains (.com, .green, .red)
+        if CIVITAI_URL_RE.match(search_term):
             if '/api/download/models' in search_term:
                 # Extract version ID from download URL
                 version_match = re.search(r'models/(\d+)', search_term)
@@ -1031,7 +1037,8 @@ def update_model_info(model_string=None, model_version=None, only_html=False, in
                                 model_folder = os.path.join(contenttype_folder('TextualInversion'))
 
                 model_url = selected_version.get('downloadUrl', '')
-                model_main_url = f"https://civitai.com/models/{item['id']}"
+                # model_main_url = f"https://civitai.com/models/{item['id']}"
+                model_main_url = f"https://civitai.red/models/{item['id']}"
 
                 url = f"https://civitai.com/api/v1/model-versions/{selected_version['id']}"
                 api_version = request_civit_api(url)
@@ -1576,7 +1583,8 @@ def get_headers(referer=None, no_api=None):
         'Content-Type': 'application/json'
     }
     if referer:
-        headers['Referer'] = f"https://civitai.com/models/{referer}"
+        # headers['Referer'] = f"https://civitai.com/models/{referer}"
+        headers['Referer'] = f"https://civitai.red/models/{referer}"
     if api_key and not no_api:
         headers['Authorization'] = f"Bearer {api_key}"
 
