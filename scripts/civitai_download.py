@@ -399,21 +399,44 @@ def get_download_link(url, model_id):
     headers = _api.get_headers(model_id)
     proxies, ssl = _api.get_proxies()
 
-    response = requests.get(url, headers=headers, allow_redirects=False, proxies=proxies, verify=ssl)
+    current_url = url
 
-    if 300 <= response.status_code <= 308:
-        if 'login?returnUrl' in response.text and 'reason=download-auth' in response.text:
-            return 'NO_API'
+    # Aria2 would send the CivitAI Authorization header to B2/Backblaze signed URLs,
+    # which causes 403 because B2 uses its own query-param auth (?Authorization=...)
+    for _ in range(10):
+        # Only send CivitAI auth headers to civitai.com (not to B2/Backblaze)
+        is_civitai = 'civitai.com' in current_url and 'b2.civitai.com' not in current_url
+        req_headers = headers if is_civitai else {}
 
-        download_link = response.headers['Location']
+        response = requests.get(
+            current_url,
+            headers=req_headers,
+            allow_redirects=False,
+            proxies=proxies,
+            verify=ssl
+        )
 
-        # Fix protocol-relative URLs (e.g. //civitai.com/... → https://civitai.com/...)
-        if download_link.startswith('//'):
-            download_link = 'https:' + download_link
+        if response.status_code == 200:
+            # Reached the final URL
+            return current_url
 
-        return download_link
-    else:
-        return None
+        if 300 <= response.status_code <= 308:
+            if 'login?returnUrl' in response.text and 'reason=download-auth' in response.text:
+                return 'NO_API'
+
+            location = response.headers.get('Location', '')
+            if not location:
+                return None
+
+            # Fix protocol-relative URLs (e.g. //civitai.com/... → https://civitai.com/...)
+            if location.startswith('//'):
+                location = 'https:' + location
+
+            current_url = location
+        else:
+            return None
+
+    return current_url
 
 def download_file(url, file_path, install_path, model_id, progress=gr.Progress() if queue else None):
     try:
