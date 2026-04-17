@@ -394,6 +394,7 @@ def convert_size(size):
         size /= 1024
     return f"{size:.2f} GB"
 
+# === ANXETY EDIT ===
 def get_download_link(url, model_id):
     headers = _api.get_headers(model_id)
     proxies, ssl = _api.get_proxies()
@@ -405,6 +406,11 @@ def get_download_link(url, model_id):
             return 'NO_API'
 
         download_link = response.headers['Location']
+
+        # Fix protocol-relative URLs (e.g. //civitai.com/... → https://civitai.com/...)
+        if download_link.startswith('//'):
+            download_link = 'https:' + download_link
+
         return download_link
     else:
         return None
