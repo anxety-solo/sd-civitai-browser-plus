@@ -124,52 +124,40 @@ def txt2img_output(image_url):
 
 ## === ANXETY EDITs ===
 def get_base_models():
-    api_url = 'https://civitai.com/api/v1/models?baseModels=GetModels'
+    api_url = 'https://civitai.com/api/v1/enums'
     json_return = _api.request_civit_api(api_url, True)
-    # The data below is taken from the API response (filtered)
+
     default_options = [
-        'SD 1.4',
-        'SD 1.5',
-        'SD 2.0',
-        'SD 2.1',
-        'SDXL 0.9',
-        'SDXL 1.0',
-        'SD 3',
-        'SD 3.5',
-        'SD 3.5 Medium',
-        'SD 3.5 Large',
-        'SD 3.5 Large Turbo',
-        'Pony',
-        'Flux.1 S',
-        'Flux.1 D',
-        'Flux.1 Kontext',
-        'AuraFlow',
-        'SDXL 1.0 LCM',
-        'SDXL Distilled',
-        'SDXL Turbo',
-        'SDXL Lightning',
-        'SDXL Hyper',
-        'Illustrious',
-        'LTXV',
-        'NoobAI',
-        'Wan Video',
+        'Anima',
+        'SD 1.4', 'SD 1.5', 'SD 2.0', 'SD 2.1',
+        'SDXL 0.9', 'SDXL 1.0', 'SD 3', 'SD 3.5',
+        'SD 3.5 Medium', 'SD 3.5 Large', 'SD 3.5 Large Turbo',
+        'Pony', 'Flux.1 S', 'Flux.1 D', 'Flux.1 Kontext',
+        'AuraFlow', 'SDXL 1.0 LCM', 'SDXL Distilled',
+        'SDXL Turbo', 'SDXL Lightning', 'SDXL Hyper',
+        'Illustrious', 'LTXV', 'NoobAI', 'Wan Video',
         'Other'
     ]
 
-    if not isinstance(json_return, dict):
-        print("Couldn't fetch latest baseModel options, using default.")
-        return default_options
+    def sort_models(models: list[str]) -> list[str]:
+        return sorted(models, key=lambda x: (x == "Other", x.lower()))
 
-    if 'error' in json_return and 'message' in json_return['error']:
-        try:
-            parsed_message = json.loads(json_return['error']['message'])
-            options = parsed_message[0]['errors'][0][0]['values']
-            return options
-        except (KeyError, IndexError, json.JSONDecodeError, TypeError) as e:
-            print(f"Basemodel fetch error extracting options: {e}")
-            return default_options
-    else:
-        return default_options
+    if not isinstance(json_return, dict):
+        print("Couldn't fetch enums, using fallback.")
+        return sort_models(default_options)
+
+    try:
+        base_models = json_return.get('BaseModel', [])
+
+        if base_models:
+            return sort_models(base_models)
+
+        print("Empty BaseModel list, using fallback.")
+        return sort_models(default_options)
+
+    except Exception as e:
+        print(f"Basemodel fetch error: {e}")
+        return sort_models(default_options)
 
 ## === ANXETY EDITs ===
 def on_ui_tabs():
